@@ -90,7 +90,7 @@ function validateEnv(): Env {
     if (error instanceof z.ZodError) {
       console.error('❌ [ENV] Variables d\'environnement invalides:')
       
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         console.error(`  - ${err.path.join('.')}: ${err.message}`)
       })
       

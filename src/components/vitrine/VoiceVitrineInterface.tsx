@@ -52,6 +52,38 @@ export default function VoiceVitrineInterface({ isOpen, onClose }: VoiceVitrineI
     maxDuration: 120 // 2 minutes maximum
   })
 
+  // Fonction de fin de démo (déclarée avant le useEffect qui l'utilise)
+  const handleEndDemo = useCallback(async () => {
+    try {
+      // Déconnexion AVANT fermeture pour éviter les états incohérents
+      await disconnect()
+      
+      // Nettoyage immédiat des états
+      setHasStarted(false)
+      setTimeRemaining(120)
+      setTranscript('')
+      setStatus('idle')
+      setIsListening(false)
+      
+      // Nettoyage du timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+      
+    } catch (error: unknown) {
+      console.error('Erreur de déconnexion:', error)
+    } finally {
+      // Fermeture forcée même en cas d'erreur
+      onClose()
+      
+      // Double sécurité : forcer fermeture après délai minimal
+      setTimeout(() => {
+        onClose()
+      }, 50)
+    }
+  }, [onClose, disconnect])
+
   // Timer de démo
   useEffect(() => {
     if (hasStarted && isConnected) {
@@ -109,37 +141,6 @@ export default function VoiceVitrineInterface({ isOpen, onClose }: VoiceVitrineI
       setHasStarted(false)
     }
   }, [connect])
-
-  const handleEndDemo = useCallback(async () => {
-    try {
-      // Déconnexion AVANT fermeture pour éviter les états incohérents
-      await disconnect()
-      
-      // Nettoyage immédiat des états
-      setHasStarted(false)
-      setTimeRemaining(120)
-      setTranscript('')
-      setStatus('idle')
-      setIsListening(false)
-      
-      // Nettoyage du timer
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-        timerRef.current = null
-      }
-      
-    } catch (error: unknown) {
-      console.error('Erreur de déconnexion:', error)
-    } finally {
-      // Fermeture forcée même en cas d'erreur
-      onClose()
-      
-      // Double sécurité : forcer fermeture après délai minimal
-      setTimeout(() => {
-        onClose()
-      }, 50)
-    }
-  }, [onClose, disconnect])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)

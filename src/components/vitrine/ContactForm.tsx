@@ -41,11 +41,11 @@ export default function ContactForm({ leadType = 'pilot', className = '' }: Cont
       const supabase = getSupabaseSingleton();
       const { error } = await supabase
         .from('contact_leads')
-        .insert([{ 
+        .insert({
           ...formData, 
           lead_type: leadType,
           user_agent: userAgent
-        }]);
+        } as never);
       
       if (error) {
         console.error('Erreur Supabase:', error);

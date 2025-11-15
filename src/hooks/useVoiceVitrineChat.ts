@@ -255,13 +255,17 @@ export function useVoiceVitrineChat({
         }
         
         // Logger l'état AVANT assignation
-        console.log(`📊 Audio element AVANT - srcObject active: ${audioElementRef.current.srcObject?.active || false}, paused: ${audioElementRef.current.paused}, muted: ${audioElementRef.current.muted}`)
+        const srcObjectBefore = audioElementRef.current.srcObject
+        const isActiveBefore = srcObjectBefore instanceof MediaStream ? srcObjectBefore.active : false
+        console.log(`📊 Audio element AVANT - srcObject active: ${isActiveBefore}, paused: ${audioElementRef.current.paused}, muted: ${audioElementRef.current.muted}`)
         
         // ✅ Assigner le stream
         audioElementRef.current.srcObject = event.streams[0]
         
         // Logger l'état APRÈS assignation
-        console.log(`📊 Audio element APRÈS - srcObject active: ${audioElementRef.current.srcObject?.active || false}`)
+        const srcObjectAfter = audioElementRef.current.srcObject
+        const isActiveAfter = srcObjectAfter instanceof MediaStream ? srcObjectAfter.active : false
+        console.log(`📊 Audio element APRÈS - srcObject active: ${isActiveAfter}`)
         
         // 🔧 FIX CRITIQUE: Resume AudioContext pour débloquer autoplay
         try {
@@ -311,9 +315,7 @@ export function useVoiceVitrineChat({
             noiseSuppression: true,
             autoGainControl: true,
             sampleRate: 16000, // ✅ Standard OpenAI Realtime (16 kHz PCM16 mono)
-            channelCount: 1,
-            latency: 0.01, // Faible latence
-            volume: 1.0
+            channelCount: 1
           }
         })
         

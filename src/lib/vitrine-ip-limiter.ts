@@ -283,11 +283,15 @@ export class VitrineIPLimiter {
       if (error) {
         console.error('❌ Erreur fin de session:', error)
         // Même en cas d'erreur, essayer de réinitialiser is_session_active
-        await supabase
-          .from('vitrine_demo_sessions')
-          .update({ is_session_active: false })
-          .eq('ip_address', ipAddress)
-          .catch(() => {}) // Ignorer erreur si déjà à false
+        // Ignorer les erreurs potentielles
+        try {
+          await supabase
+            .from('vitrine_demo_sessions')
+            .update({ is_session_active: false } as never)
+            .eq('ip_address', ipAddress)
+        } catch (_e) {
+          // Ignorer erreur si déjà à false
+        }
         return false
       }
 

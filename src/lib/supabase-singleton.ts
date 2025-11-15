@@ -6,15 +6,14 @@
  */
 
 import { createBrowserClient } from '@supabase/ssr'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 // 🔒 Instance singleton
-let supabaseInstance: SupabaseClient | null = null
+let supabaseInstance: ReturnType<typeof createBrowserClient> | null = null
 
 /**
  * Obtenir l'instance Supabase unique (côté client)
  */
-export function getSupabaseSingleton(): SupabaseClient {
+export function getSupabaseSingleton() {
   if (!supabaseInstance) {
     // Vérifier les variables d'environnement
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
