@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import Image from "next/image";
+import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
 // 🎯 ACETERNITY UI COMPONENTS (Optimisés)
@@ -37,34 +36,15 @@ import {
   VscRobot, 
   VscGraph, 
   VscMail, 
-  VscPlay,
-  VscShield,
-  VscHeart,
   VscGear,
-  VscWarning,
-  VscChromeMinimize,
-  VscCheckAll,
-  VscTarget,
-  VscRocket,
-  VscCheck
+  VscWarning
 } from 'react-icons/vsc';
 
-// 🎯 CUSTOM HOOK FOR PERFORMANCE
-const useInView = (threshold = 0.1) => {
-  const [inView, setInView] = useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      { threshold, rootMargin: '50px' }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [threshold]);
-
-  return [ref, inView] as const;
-};
+declare global {
+  interface Window {
+    voiceTimer?: ReturnType<typeof setInterval> | null
+  }
+}
 
 export default function LandingClientOptimizedPage() {
   // 🎯 STATE
@@ -86,17 +66,11 @@ export default function LandingClientOptimizedPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  const { scrollYProgress } = useScroll();
-  const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
-
   // 🎤 VOICE CHAT HOOK
   const {
     connect: connectVoice,
     disconnect: disconnectVoice,
-    isConnected: isVoiceConnected,
-    error: voiceError,
-    currentTranscript,
-    isAISpeaking
+    error: voiceError
   } = useVoiceVitrineChat({
     onStatusChange: setVoiceStatus,
     onTranscriptUpdate: setVoiceTranscript,
@@ -115,7 +89,7 @@ export default function LandingClientOptimizedPage() {
       setIsVoiceActive(true);
       setVoiceStatus('connecting');
       
-      const result = await connectVoice();
+      await connectVoice();
       
       setVoiceStatus('connected');
       
@@ -131,8 +105,8 @@ export default function LandingClientOptimizedPage() {
       }, 1000);
       
       // Stocker le timer pour le nettoyer
-      (window as any).voiceTimer = timer;
-    } catch (error: any) {
+      window.voiceTimer = timer;
+    } catch (error: unknown) {
       console.error('Erreur connexion vocale:', error);
       setVoiceStatus('error');
       setIsVoiceActive(false);
@@ -147,16 +121,16 @@ export default function LandingClientOptimizedPage() {
       await disconnectVoice();
       
       // Nettoyage
-      if ((window as any).voiceTimer) {
-        clearInterval((window as any).voiceTimer);
-        (window as any).voiceTimer = null;
+      if (window.voiceTimer) {
+        clearInterval(window.voiceTimer);
+        window.voiceTimer = null;
       }
       
       setIsVoiceActive(false);
       setVoiceStatus('idle');
       setVoiceTranscript('');
       setVoiceTimeRemaining(300); // 5 minutes
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erreur déconnexion vocale:', error);
     }
   };
@@ -540,7 +514,6 @@ export default function LandingClientOptimizedPage() {
                       >
                         <Avatar3D 
                           size={320}
-                          currentSection="hero" 
                           status={voiceStatus === 'speaking' ? 'speaking' : 
                                  voiceStatus === 'listening' ? 'listening' : 
                                  voiceStatus === 'connecting' ? 'connecting' : 'idle'}
@@ -569,7 +542,6 @@ export default function LandingClientOptimizedPage() {
                       >
                         <Avatar3D 
                           size={200}
-                          currentSection="hero" 
                           status={voiceStatus === 'speaking' ? 'speaking' : 
                                  voiceStatus === 'listening' ? 'listening' : 
                                  voiceStatus === 'connecting' ? 'connecting' : 'idle'}

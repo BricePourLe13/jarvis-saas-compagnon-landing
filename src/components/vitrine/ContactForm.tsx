@@ -66,10 +66,10 @@ export default function ContactForm({ leadType = 'pilot', className = '' }: Cont
         setStatus('idle');
       }, 3000);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erreur envoi formulaire:', error);
       setStatus('error');
-      setErrorMessage(error.message || 'Une erreur est survenue. Veuillez réessayer.');
+      setErrorMessage(error instanceof Error ? error.message : 'Une erreur est survenue. Veuillez réessayer.');
     }
   };
 

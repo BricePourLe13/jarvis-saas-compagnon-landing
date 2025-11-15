@@ -2,6 +2,18 @@
 
 import { useEffect } from 'react'
 
+type SentryClient = {
+  setTag: (key: string, value: string) => void
+  setUser: (user: { email?: string | null; id?: string }) => void
+  captureException: (error: unknown, context?: { tags?: Record<string, string> }) => void
+}
+
+declare global {
+  interface Window {
+    Sentry?: SentryClient
+  }
+}
+
 /**
  * 📊 Sentry Provider - Monitoring d'erreurs en production
  * Initialise Sentry uniquement en production pour éviter le spam en dev
@@ -13,8 +25,8 @@ export function SentryProvider({ children }: { children: React.ReactNode }) {
       // Sentry est déjà initialisé via instrumentation.ts
       // On configure juste les options client supplémentaires
       
-      if ((window as any).Sentry) {
-        const Sentry = (window as any).Sentry
+      if (window.Sentry) {
+        const Sentry = window.Sentry
         
         // Configuration des tags globaux
         Sentry.setTag('component', 'client')
@@ -30,7 +42,7 @@ export function SentryProvider({ children }: { children: React.ReactNode }) {
                 id: localStorage.getItem('user_id') || 'anonymous'
               })
             }
-          } catch (error) {
+          } catch {
             // Ignore les erreurs de localStorage
           }
         }
@@ -38,7 +50,7 @@ export function SentryProvider({ children }: { children: React.ReactNode }) {
         updateUserContext()
         
         // Capturer les erreurs non gérées
-        window.addEventListener('unhandledrejection', (event) => {
+        window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
           Sentry.captureException(event.reason, {
             tags: {
               type: 'unhandled_promise_rejection'
@@ -47,7 +59,7 @@ export function SentryProvider({ children }: { children: React.ReactNode }) {
         })
         
         // Capturer les erreurs de ressources
-        window.addEventListener('error', (event) => {
+        window.addEventListener('error', (event: ErrorEvent) => {
           if (event.filename) {
             Sentry.captureException(new Error(`Resource loading error: ${event.filename}`), {
               tags: {

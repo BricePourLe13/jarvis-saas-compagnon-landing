@@ -45,7 +45,7 @@ export class VitrineIPLimiter {
       const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
       
       // 1. Récupérer ou créer l'entrée pour cette IP
-      let { data: sessionData, error } = await supabase
+      const { data: sessionData, error } = await supabase
         .from('vitrine_demo_sessions')
         .select('*')
         .eq('ip_address', ipAddress)

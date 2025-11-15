@@ -7,7 +7,6 @@ interface Avatar3DProps {
   size?: number
   className?: string
   eyeScale?: number
-  currentSection?: 'hero' | 'social-proof' | 'solutions' | 'benefits'
   isListening?: boolean
   isSpeaking?: boolean
 }
@@ -21,7 +20,6 @@ export default function Avatar3D({
   size = 450, 
   className, 
   eyeScale = 1, 
-  currentSection = 'hero',
   isListening: propIsListening = false,
   isSpeaking: propIsSpeaking = false
 }: Avatar3DProps) {
@@ -47,9 +45,10 @@ export default function Avatar3D({
   }, [])
 
   useEffect(() => {
+    const timers = activeTimers.current
     return () => {
-      activeTimers.current.forEach(timer => clearTimeout(timer))
-      activeTimers.current.clear()
+      timers.forEach(timer => clearTimeout(timer))
+      timers.clear()
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
   }, [])
@@ -58,7 +57,7 @@ export default function Avatar3D({
   useEffect(() => {
     const blink = () => {
       setIsBlinking(true)
-      const timer = addTimer(setTimeout(() => setIsBlinking(false), 150))
+      addTimer(setTimeout(() => setIsBlinking(false), 150))
       const nextBlink = 2000 + Math.random() * 3000
       timeoutRef.current = addTimer(setTimeout(blink, nextBlink))
     }
@@ -109,7 +108,7 @@ export default function Avatar3D({
         if (lookSequenceIndex >= patterns.length) {
           isInSequence = false
           lookSequenceIndex = 0
-          const pauseTimer = addTimer(setTimeout(executeLook, 4000))
+          addTimer(setTimeout(executeLook, 4000))
           return
         }
 
@@ -117,7 +116,7 @@ export default function Avatar3D({
         setIsLookingAround(true)
         setEyePosition({ x: pattern.x, y: pattern.y })
         
-        const nextTimer = addTimer(setTimeout(() => {
+        addTimer(setTimeout(() => {
           lookSequenceIndex++
           performNextLook()
         }, pattern.duration))

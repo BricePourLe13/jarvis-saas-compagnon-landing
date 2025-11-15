@@ -168,36 +168,62 @@ export const jarvisKnowledgeBase = {
 };
 
 // 🎯 LOGIQUE MÉTIER POUR FUNCTION CALLS
-export async function executeJarvisFunction(functionName: string, args: any) {
+type FunctionArgs = Record<string, unknown>
+
+const toNumber = (value: unknown, fallback: number): number =>
+  typeof value === "number" ? value : fallback
+
+export async function executeJarvisFunction(functionName: string, args: FunctionArgs) {
   switch (functionName) {
     case 'get_jarvis_solution_details':
-      return jarvisKnowledgeBase.solution[args.aspect as keyof typeof jarvisKnowledgeBase.solution];
+      if (typeof args.aspect === 'string' && args.aspect in jarvisKnowledgeBase.solution) {
+        return jarvisKnowledgeBase.solution[args.aspect as keyof typeof jarvisKnowledgeBase.solution];
+      }
+      return jarvisKnowledgeBase.solution.technique;
       
     case 'calculate_personalized_roi':
-      const { members_count, current_churn_rate = 25, monthly_revenue } = args;
-      const churnReduction = Math.min(40, members_count > 1000 ? 40 : 30);
-      const monthlySavings = monthly_revenue ? (monthly_revenue * (current_churn_rate - (current_churn_rate * (1 - churnReduction/100)))) / 100 : null;
-      const estimatedMonthlyRevenue = monthly_revenue || members_count * 45; // 45€ moyenne abonnement
+      {
+        const membersCount = toNumber(args.members_count, 0)
+        const currentChurnRate = toNumber(args.current_churn_rate, 25)
+        const monthlyRevenue = typeof args.monthly_revenue === 'number' ? args.monthly_revenue : null
+        const churnReduction = Math.min(40, membersCount > 1000 ? 40 : 30);
+        const monthlySavings = monthlyRevenue
+          ? (monthlyRevenue * (currentChurnRate - (currentChurnRate * (1 - churnReduction / 100)))) / 100
+          : null;
+        const estimatedMonthlyRevenue = monthlyRevenue ?? membersCount * 45; // 45€ moyenne abonnement
       
       return {
         churn_reduction: `${churnReduction}%`,
         monthly_savings: monthlySavings ? `${Math.round(monthlySavings)}€` : `${Math.round(estimatedMonthlyRevenue * 0.12)}€`,
-        advertising_revenue: `${Math.round(members_count * 2.5)}€/mois`, // 2.5€ par membre/mois en moyenne
-        roi_months: members_count > 1500 ? "4-6 mois" : members_count > 500 ? "6-9 mois" : "8-12 mois",
-        total_annual_benefit: `${Math.round((estimatedMonthlyRevenue * 0.12 + members_count * 2.5) * 12)}€`
+        advertising_revenue: `${Math.round(membersCount * 2.5)}€/mois`, // 2.5€ par membre/mois en moyenne
+        roi_months: membersCount > 1500 ? "4-6 mois" : membersCount > 500 ? "6-9 mois" : "8-12 mois",
+        total_annual_benefit: `${Math.round((estimatedMonthlyRevenue * 0.12 + membersCount * 2.5) * 12)}€`
       };
+      }
       
     case 'get_success_stories':
-      const { size_category = 'medium' } = args;
-      return {
-        case_study: jarvisKnowledgeBase.successStories[size_category as keyof typeof jarvisKnowledgeBase.successStories],
+      {
+        const sizeCategory =
+          typeof args.size_category === 'string' && args.size_category in jarvisKnowledgeBase.successStories
+            ? (args.size_category as keyof typeof jarvisKnowledgeBase.successStories)
+            : 'medium'
+        return {
+        case_study: jarvisKnowledgeBase.successStories[sizeCategory],
         testimonial: "« JARVIS a transformé notre relation client. Nos membres adorent et notre churn a chuté ! » - Gérant salle similaire",
         metrics: "Retour sur investissement moyen: 8.5 mois, Satisfaction client: +28%"
       };
+      }
       
     case 'generate_implementation_plan':
-      const { gym_locations = 1, urgency = 'flexible' } = args;
-      const timeline = urgency === 'asap' ? '2-3 semaines' : urgency === '3months' ? '6-8 semaines' : '8-12 semaines';
+      {
+        const gymLocations = toNumber(args.gym_locations, 1)
+        const urgency =
+          typeof args.urgency === 'string' && ['asap', '3months', '6months', 'flexible'].includes(args.urgency)
+            ? args.urgency
+            : 'flexible'
+        const timeline = urgency === 'asap' ? '2-3 semaines' : urgency === '3months' ? '6-8 semaines' : '8-12 semaines';
+        const scope =
+          gymLocations > 1 ? `${gymLocations} sites accompagnés simultanément` : 'Déploiement sur un site unique';
       
       return {
         timeline,
@@ -208,8 +234,10 @@ export async function executeJarvisFunction(functionName: string, args: any) {
           "Démonstration personnalisée sur site",
           "Devis détaillé sous 48h",
           "Planning d'installation optimisé"
-        ]
+        ],
+        deployment_scope: scope
       };
+      }
       
     case 'get_competitive_analysis':
       return {

@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { Box, Button, Text, VStack, HStack, Modal, ModalOverlay, ModalContent, ModalBody, Heading } from '@chakra-ui/react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { FiMic, FiMicOff, FiX } from 'react-icons/fi'
 import Avatar3D from '@/components/kiosk/Avatar3D'
 import { useVoiceVitrineChat } from '@/hooks/useVoiceVitrineChat'
@@ -10,6 +9,12 @@ import { useVoiceVitrineChat } from '@/hooks/useVoiceVitrineChat'
 interface VoiceVitrineInterfaceProps {
   isOpen: boolean
   onClose: () => void
+}
+
+type LimitErrorShape = {
+  hasActiveSession?: boolean
+  remainingCredits?: number
+  message?: string
 }
 
 export default function VoiceVitrineInterface({ isOpen, onClose }: VoiceVitrineInterfaceProps) {
@@ -40,7 +45,6 @@ export default function VoiceVitrineInterface({ isOpen, onClose }: VoiceVitrineI
     disconnect,
     isConnected,
     error,
-    currentTranscript,
     isAISpeaking
   } = useVoiceVitrineChat({
     onStatusChange: setStatus,
@@ -67,7 +71,7 @@ export default function VoiceVitrineInterface({ isOpen, onClose }: VoiceVitrineI
         clearInterval(timerRef.current)
       }
     }
-  }, [hasStarted, isConnected])
+  }, [handleEndDemo, hasStarted, isConnected])
 
   // Démarrer démo directement (plus de gate email)
   const handleStartDemo = useCallback(async () => {
@@ -85,16 +89,20 @@ export default function VoiceVitrineInterface({ isOpen, onClose }: VoiceVitrineI
       }
       
       setStatus('connected')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erreur de connexion:', error)
       
-      // 🔒 NOUVEAU : Gérer les erreurs de limitation
-      if (error.hasActiveSession) {
+      const limitErrorDetails: LimitErrorShape | null =
+        typeof error === 'object' && error !== null ? (error as LimitErrorShape) : null
+      
+      if (limitErrorDetails?.hasActiveSession) {
         setLimitError('⚠️ Session déjà active. Fermez les autres onglets.')
-      } else if (error.remainingCredits === 0) {
+      } else if (limitErrorDetails?.remainingCredits === 0) {
         setLimitError('⏰ Temps de démo épuisé. Revenez demain ou contactez-nous.')
-      } else if (error.message) {
-        setLimitError(error.message)
+      } else if (limitErrorDetails?.message) {
+        setLimitError(limitErrorDetails.message)
+      } else {
+        setLimitError('Une erreur est survenue lors de la connexion. Réessayez.')
       }
       
       setStatus('error')
@@ -120,7 +128,7 @@ export default function VoiceVitrineInterface({ isOpen, onClose }: VoiceVitrineI
         timerRef.current = null
       }
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erreur de déconnexion:', error)
     } finally {
       // Fermeture forcée même en cas d'erreur
@@ -224,7 +232,6 @@ export default function VoiceVitrineInterface({ isOpen, onClose }: VoiceVitrineI
             {/* Avatar 3D */}
             <Box position="relative" w="300px" h="300px">
               <Avatar3D 
-                currentSection="vitrine" 
                 status={getAvatarStatus()}
               />
             </Box>

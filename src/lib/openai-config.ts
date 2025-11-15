@@ -372,7 +372,7 @@ export function getMinimalSessionConfig(context: OpenAIContext) {
 export function getFullSessionUpdate(
   config: ReturnType<typeof getConfigForContext>,
   instructions: string,
-  tools?: any[],
+  tools?: unknown[],
   voice?: OpenAIVoice
 ) {
   // ✅ Structure session.update selon doc OpenAI
@@ -410,7 +410,7 @@ export function getFullSessionUpdate(
  * 
  * @example
  * ```typescript
- * const url = getRealtimeURL('production')
+ * const url = getRealtimeURL()
  * // 'https://api.openai.com/v1/realtime/calls'
  * ```
  * 
@@ -418,7 +418,7 @@ export function getFullSessionUpdate(
  * Le modèle est spécifié dans le sessionConfig lors de la création de session
  * Doc: https://platform.openai.com/docs/guides/realtime-webrtc#connecting-using-the-unified-interface
  */
-export function getRealtimeURL(context: OpenAIContext): string {
+export function getRealtimeURL(): string {
   // ✅ FORMAT GA : Utiliser /realtime/calls sans query param
   return OPENAI_CONFIG.api.realtimeCalls
 }

@@ -569,9 +569,10 @@ Missions vocales : ${JARVIS_KNOWLEDGE_BASE.dashboard.missions_jarvis.description
 Objectifs IA : ${JARVIS_KNOWLEDGE_BASE.dashboard.objectifs_ia_hebdo.description}
 
 🏆 PRINCIPAUX BÉNÉFICES DOCUMENTÉS
-${Object.values(JARVIS_KNOWLEDGE_BASE.benefits).map((b: any) => 
-  b.name ? `- ${b.name}` : ''
-).filter(Boolean).join('\n')}
+${(Object.values(JARVIS_KNOWLEDGE_BASE.benefits) as Array<{ name?: string }>)
+  .map((benefit) => (benefit.name ? `- ${benefit.name}` : ''))
+  .filter(Boolean)
+  .join('\n')}
 
 ⏱️ IMPLÉMENTATION
 Durée : ${JARVIS_KNOWLEDGE_BASE.implementation.total_duration}

@@ -4,10 +4,37 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { executeJarvisFunction } from '@/lib/jarvis-expert-functions'
 import { getRealtimeURL } from '@/lib/openai-config'
 
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext
+  }
+}
+
 interface VoiceVitrineConfig {
   onStatusChange?: (status: 'idle' | 'connecting' | 'connected' | 'listening' | 'speaking' | 'error') => void
   onTranscriptUpdate?: (transcript: string) => void
   maxDuration?: number // en secondes
+}
+
+type FunctionCallMessage = {
+  type: string
+  call_id?: string
+  name?: string
+  arguments?: string
+  item?: {
+    type?: string
+    name?: string
+  }
+  transcript?: string
+  error?: { message?: string }
+}
+
+type SessionError = Error & {
+  statusCode?: number
+  hasActiveSession?: boolean
+  remainingCredits?: number
+  isBlocked?: boolean
+  resetTime?: string
 }
 
 export function useVoiceVitrineChat({
@@ -43,8 +70,12 @@ export function useVoiceVitrineChat({
   }, [onTranscriptUpdate])
 
   // 🎯 Handler pour les function calls (ROI, success stories, etc.)
-  const handleFunctionCall = useCallback(async (message: any, dataChannel: RTCDataChannel) => {
+  const handleFunctionCall = useCallback(async (message: FunctionCallMessage, dataChannel: RTCDataChannel) => {
     try {
+      if (!message.name || !message.arguments) {
+        console.warn('Function call message incomplet:', message)
+        return
+      }
       const { call_id, name, arguments: argsString } = message
       console.log(`🔧 Exécution function: ${name}`)
       console.log(`📊 Arguments:`, argsString)
@@ -111,13 +142,17 @@ export function useVoiceVitrineChat({
       // 🔒 NOUVEAU : Gérer les erreurs de limitation
       const errorData = await response.json().catch(() => ({}))
       
-      const error: any = new Error(errorData.error || `Erreur session: ${response.status}`)
-      error.statusCode = response.status
-      error.hasActiveSession = errorData.hasActiveSession
-      error.remainingCredits = errorData.remainingCredits
-      error.isBlocked = errorData.isBlocked
+      const sessionError: SessionError = Object.assign(
+        new Error(errorData.error || `Erreur session: ${response.status}`),
+        {
+          statusCode: response.status,
+          hasActiveSession: errorData.hasActiveSession,
+          remainingCredits: errorData.remainingCredits,
+          isBlocked: errorData.isBlocked
+        }
+      )
       
-      throw error
+      throw sessionError
     }
 
     const sessionData = await response.json()
@@ -230,11 +265,14 @@ export function useVoiceVitrineChat({
         
         // 🔧 FIX CRITIQUE: Resume AudioContext pour débloquer autoplay
         try {
-          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-          if (audioCtx.state === 'suspended') {
-            audioCtx.resume().then(() => {
-              console.log('✅ [AUDIO] AudioContext resumed (autoplay débloqué)')
-            })
+          const AudioContextConstructor = window.AudioContext || window.webkitAudioContext
+          if (AudioContextConstructor) {
+            const audioCtx = new AudioContextConstructor()
+            if (audioCtx.state === 'suspended') {
+              audioCtx.resume().then(() => {
+                console.log('✅ [AUDIO] AudioContext resumed (autoplay débloqué)')
+              })
+            }
           }
         } catch (err) {
           console.warn(`⚠️ [AUDIO] AudioContext non disponible: ${err}`)
@@ -282,7 +320,7 @@ export function useVoiceVitrineChat({
         // Ajouter track audio
         const audioTrack = stream.getAudioTracks()[0]
         pc.addTrack(audioTrack, stream)
-      } catch (micError) {
+      } catch {
         throw new Error('MICROPHONE_PERMISSION_DENIED')
       }
 
@@ -385,8 +423,8 @@ export function useVoiceVitrineChat({
         updateStatus('idle')
       }
 
-      dc.onerror = (error) => {
-        console.error('❌ Erreur data channel:', error)
+      dc.onerror = (event: Event) => {
+        console.error('❌ Erreur data channel:', event)
         setError('Erreur de communication')
         updateStatus('error')
       }
@@ -400,7 +438,7 @@ export function useVoiceVitrineChat({
       console.log('🔑 Token utilisé:', ephemeralKey?.substring(0, 20) + '...')
       // 🎯 Vitrine utilise le modèle full pour meilleure qualité démo
       // ✅ FORMAT GA : Pas de header Beta pour gpt-realtime-2025-08-28
-      const realtimeResponse = await fetch(getRealtimeURL('vitrine'), {
+      const realtimeResponse = await fetch(getRealtimeURL(), {
         method: 'POST',
         body: offer.sdp,
         headers: {
@@ -422,19 +460,22 @@ export function useVoiceVitrineChat({
       // 💳 Retourner les données de session
       return sessionResponse
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Erreur WebRTC:', error)
       
+      const sessionError: SessionError =
+        (error instanceof Error ? error : new Error('Erreur de connexion')) as SessionError
+      
       // ✅ PROPAGER LE MESSAGE D'ERREUR DE L'API (limite quotidienne, etc.)
-      let errorMessage = error.message || 'Erreur de connexion'
+      let errorMessage = sessionError.message || 'Erreur de connexion'
       
       // Si l'erreur vient de createDemoSession, utiliser le message de l'API
-      if (error.statusCode === 429 || error.statusCode === 403 || error.statusCode === 409) {
+      if (sessionError.statusCode === 429 || sessionError.statusCode === 403 || sessionError.statusCode === 409) {
         // Erreur de limitation ou blocage - message déjà formaté par l'API
-        errorMessage = error.message
+        errorMessage = sessionError.message
       } else {
         // Autres erreurs - formater le message
-        switch (error.message) {
+        switch (sessionError.message) {
           case 'MICROPHONE_PERMISSION_DENIED':
             errorMessage = 'Veuillez autoriser l\'accès au microphone'
             break
@@ -442,11 +483,11 @@ export function useVoiceVitrineChat({
             errorMessage = 'Navigateur incompatible. Utilisez Chrome, Firefox ou Safari récent'
             break
           default:
-            if (error.name === 'NotAllowedError') {
+            if (sessionError.name === 'NotAllowedError') {
               errorMessage = 'Accès microphone refusé'
-            } else if (error.message && error.message !== 'Erreur de connexion') {
+            } else if (sessionError.message && sessionError.message !== 'Erreur de connexion') {
               // Garder le message original si présent
-              errorMessage = error.message
+              errorMessage = sessionError.message
             }
             break
         }
@@ -456,14 +497,15 @@ export function useVoiceVitrineChat({
       updateStatus('error')
       
       // ✅ Propager l'erreur avec le bon message
-      const finalError: any = new Error(errorMessage)
-      finalError.statusCode = error.statusCode
-      finalError.hasActiveSession = error.hasActiveSession
-      finalError.remainingCredits = error.remainingCredits
-      finalError.isBlocked = error.isBlocked
+      const finalError: SessionError = Object.assign(new Error(errorMessage), {
+        statusCode: sessionError.statusCode,
+        hasActiveSession: sessionError.hasActiveSession,
+        remainingCredits: sessionError.remainingCredits,
+        isBlocked: sessionError.isBlocked
+      })
       throw finalError
     }
-  }, [createDemoSession, updateStatus, updateTranscript])
+  }, [createDemoSession, handleFunctionCall, updateStatus, updateTranscript])
 
   // Connexion
   const connect = useCallback(async () => {
@@ -476,11 +518,14 @@ export function useVoiceVitrineChat({
       const sessionData = await initializeWebRTC()
       // 💳 Retourner les données de session (incluant remainingCredits)
       return sessionData
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erreur de connexion:', error)
       
+      const sessionError: SessionError =
+        (error instanceof Error ? error : new Error('Erreur de connexion')) as SessionError
+      
       // ✅ PROPAGER LE MESSAGE D'ERREUR CORRECTEMENT
-      const errorMessage = error.message || 'Erreur de connexion'
+      const errorMessage = sessionError.message || 'Erreur de connexion'
       setError(errorMessage)
       
       // Réinitialiser l'état en cas d'erreur pour éviter la boucle
@@ -488,12 +533,13 @@ export function useVoiceVitrineChat({
       setIsConnected(false)
       
       // Propager l'erreur avec toutes les métadonnées
-      const finalError: any = new Error(errorMessage)
-      finalError.statusCode = error.statusCode
-      finalError.hasActiveSession = error.hasActiveSession
-      finalError.remainingCredits = error.remainingCredits
-      finalError.isBlocked = error.isBlocked
-      finalError.resetTime = error.resetTime
+      const finalError: SessionError = Object.assign(new Error(errorMessage), {
+        statusCode: sessionError.statusCode,
+        hasActiveSession: sessionError.hasActiveSession,
+        remainingCredits: sessionError.remainingCredits,
+        isBlocked: sessionError.isBlocked,
+        resetTime: sessionError.resetTime
+      })
       throw finalError
     }
   }, [isConnected, initializeWebRTC, updateStatus])
