@@ -278,7 +278,9 @@ export default function LandingClientOptimizedPage() {
 
           {/* CTA Header */}
           <motion.a
-            href="/login"
+            href="https://app.jarvis-group.net"
+            target="_blank"
+            rel="noopener noreferrer"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
