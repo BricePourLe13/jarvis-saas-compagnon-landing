@@ -1,0 +1,35 @@
+# robots.txt pour JARVIS - Site Vitrine
+# Généré automatiquement - Optimisé pour Google, Bing, et autres moteurs
+
+# User-agent général (tous les robots)
+User-agent: *
+Allow: /
+
+# Pages à ne pas indexer (si tu en as)
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+# Sitemap
+Sitemap: https://jarvis-group.net/sitemap.xml
+
+# Robots spécifiques
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Bloquer les mauvais bots (scraping, spam)
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+

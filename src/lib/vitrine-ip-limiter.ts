@@ -289,7 +289,7 @@ export class VitrineIPLimiter {
             .from('vitrine_demo_sessions')
             .update({ is_session_active: false } as never)
             .eq('ip_address', ipAddress)
-        } catch (_e) {
+        } catch {
           // Ignorer erreur si déjà à false
         }
         return false

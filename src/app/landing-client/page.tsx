@@ -261,10 +261,10 @@ export default function LandingClientOptimizedPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+    <main className="min-h-screen bg-black text-white overflow-x-hidden">
       
       {/* 🎯 HEADER NAVIGATION */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-transparent">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-transparent" role="banner">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           {/* Logo */}
           <motion.div
@@ -281,6 +281,7 @@ export default function LandingClientOptimizedPage() {
             href="https://app.jarvis-group.net"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Accéder à l'application JARVIS pour clients existants"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -371,7 +372,7 @@ export default function LandingClientOptimizedPage() {
                 🚀 Révolution IA pour salles de sport
               </motion.div>
               
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-bold tracking-tight text-white leading-tight" itemProp="headline">
                 L'IA qui{" "}
                 <span className="inline-block min-w-[160px] sm:min-w-[220px] md:min-w-[280px]">
                   <FlipWords words={heroWords} className="text-white" duration={3000} />
@@ -1186,6 +1187,24 @@ export default function LandingClientOptimizedPage() {
         isOpen={isVoiceModalOpen}
         onClose={() => setIsVoiceModalOpen(false)}
       />
-    </div>
+
+      {/* Hidden SEO-friendly content for crawlers (invisible to users) */}
+      <div className="sr-only" aria-hidden="true">
+        <h2>JARVIS - Intelligence Artificielle pour Salles de Sport</h2>
+        <p>
+          JARVIS est une IA conversationnelle qui révolutionne la gestion des salles de sport. 
+          Réduisez le churn de 30%, automatisez 70% des tâches répétitives, et générez des insights 
+          actionnables grâce à l'intelligence artificielle vocale avancée. Programme pilote gratuit 
+          disponible pour 5 salles sélectionnées.
+        </p>
+        <ul>
+          <li>Détection churn 60 jours avant départ</li>
+          <li>Interface vocale naturelle (speech-to-speech)</li>
+          <li>Analytics IA en temps réel</li>
+          <li>Automatisation complète des tâches</li>
+          <li>ROI mesurable et garanti</li>
+        </ul>
+      </div>
+    </main>
   );
 }
