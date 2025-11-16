@@ -102,12 +102,12 @@ export const metadata: Metadata = {
   // Icônes
   icons: {
     icon: [
-      { url: '/Gemini_Generated_Image_bhy0snbhy0snbhy0.svg', type: 'image/svg+xml' },
-      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon.png', type: 'image/png' },
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.png', sizes: '16x16', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/favicon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
 }
