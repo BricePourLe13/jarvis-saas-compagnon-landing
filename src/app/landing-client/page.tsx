@@ -12,6 +12,11 @@ const VoiceVitrineInterface = dynamic(
   { ssr: false }
 );
 
+const Avatar3D = dynamic(
+  () => import("@/components/kiosk/Avatar3D"),
+  { ssr: false }
+);
+
 const ContactForm = dynamic(
   () => import("@/components/vitrine/ContactForm"),
   { ssr: false }
@@ -122,18 +127,20 @@ export default function LandingClientResendStyle() {
         </div>
       </header>
 
-      {/* 🎯 HERO SECTION */}
+      {/* 🎯 HERO SECTION - AVEC SPHÈRE */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         {/* Glow Effect Background */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
         
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
+        <div className="max-w-7xl mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Left: Text Content */}
+          <div className="space-y-8 text-center lg:text-left">
             {/* Badge */}
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-blue-400"
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-blue-400 mx-auto lg:mx-0"
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -158,7 +165,7 @@ export default function LandingClientResendStyle() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed"
+              className="text-lg md:text-xl text-neutral-400 max-w-2xl leading-relaxed mx-auto lg:mx-0"
             >
               Transformez vos lieux physiques en expériences intelligentes. 
               Détection d'intention, actions autonomes et analytics en temps réel.
@@ -171,84 +178,91 @@ export default function LandingClientResendStyle() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+              className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start"
             >
-              <button 
-                onClick={handleStartVoice}
+              <a 
+                href="#contact"
                 className="h-12 px-8 rounded-full bg-white text-black font-semibold hover:bg-neutral-200 transition-all flex items-center gap-2 group"
               >
-                {isVoiceActive ? 'Stop Demo' : 'Tester la démo vocale'}
-                <Mic className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              </button>
+                Commencer maintenant
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </a>
               <a 
                 href="#infrastructure"
                 className="h-12 px-8 rounded-full bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-all flex items-center gap-2"
               >
-                Voir l'architecture <ArrowRight className="w-4 h-4" />
+                Voir l'architecture
               </a>
             </motion.div>
-
-            {/* Active Voice State Indicator (Floating) */}
-            {isVoiceActive && (
-               <motion.div 
-                 initial={{ opacity: 0, scale: 0.9 }}
-                 animate={{ opacity: 1, scale: 1 }}
-                 className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-neutral-900 border border-white/10 rounded-full px-6 py-3 shadow-2xl flex items-center gap-4"
-               >
-                 <div className="flex gap-1 h-4 items-center">
-                    {[1,2,3,4,5].map(i => (
-                      <motion.div 
-                        key={i}
-                        className="w-1 bg-blue-500 rounded-full"
-                        animate={{ height: [4, 16, 4] }}
-                        transition={{ duration: 0.5 + Math.random() * 0.5, repeat: Infinity }}
-                      />
-                    ))}
-                 </div>
-                 <span className="text-sm font-medium text-white">JARVIS vous écoute...</span>
-                 <span className="text-xs text-neutral-500">{voiceTimeRemaining}s</span>
-               </motion.div>
-            )}
           </div>
+
+          {/* Right: 3D SPHERE (Resend Style Cube but Sphere) */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+            className="relative flex items-center justify-center lg:justify-end"
+          >
+            {/* Container Interactif */}
+            <div 
+              className="relative w-[350px] h-[350px] sm:w-[450px] sm:h-[450px] cursor-pointer group"
+              onClick={!isVoiceActive ? handleStartVoice : undefined}
+            >
+              {/* Background Glow */}
+              <div className="absolute inset-0 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-colors duration-500" />
+              
+              {/* Sphere Wrapper */}
+              <div className="relative w-full h-full flex items-center justify-center">
+                <Avatar3D 
+                  size={400}
+                  status={voiceStatus === 'speaking' ? 'speaking' : 
+                         voiceStatus === 'listening' ? 'listening' : 
+                         voiceStatus === 'connecting' ? 'connecting' : 'idle'}
+                  eyeScale={1}
+                />
+              </div>
+
+              {/* Status Badge (Floating near sphere) */}
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full flex items-center gap-3 shadow-xl">
+                <div className={`w-2 h-2 rounded-full ${isVoiceActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
+                <span className="text-xs font-mono text-neutral-300 uppercase tracking-wider">
+                  {isVoiceActive ? 'VOICE ACTIVE' : 'SYSTEM ONLINE'}
+                </span>
+                {!isVoiceActive && <span className="text-xs text-neutral-500 border-l border-white/10 pl-3">Click to interact</span>}
+              </div>
+            </div>
+          </motion.div>
         </div>
 
-        {/* 🎯 PRODUCT VISUAL - MIRROR */}
-        <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 1 }}
-          className="mt-20 max-w-6xl mx-auto px-6 relative z-10"
-        >
-          <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-neutral-900/50 aspect-[16/9] group">
-             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20" />
-             <Image 
-               src="/images/jarvis-mirror.png" 
-               alt="JARVIS Mirror Interface" 
-               fill
-               className="object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-700"
-             />
-             
-             {/* UI Overlay Mockup */}
-             <div className="absolute bottom-0 left-0 right-0 p-8 z-30 flex items-end justify-between">
-                <div className="space-y-2">
-                   <div className="flex items-center gap-2 text-blue-400 text-sm font-mono mb-2">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                      LIVE ANALYSIS
-                   </div>
-                   <h3 className="text-2xl font-bold">Session Adhérent #4829</h3>
-                   <p className="text-neutral-400">Detection: <span className="text-white">Back Pain Signal</span> • Action: <span className="text-white">Coach Alerted</span></p>
-                </div>
-                <div className="flex gap-2">
-                  <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/10 text-xs font-mono">
-                    CONFIDENCE: 98.2%
-                  </div>
-                  <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/10 text-xs font-mono">
-                    LATENCY: 24ms
-                  </div>
-                </div>
+        {/* Active Voice State Indicator (Floating Bottom) - Only when active */}
+        {isVoiceActive && (
+           <motion.div 
+             initial={{ opacity: 0, y: 20 }}
+             animate={{ opacity: 1, y: 0 }}
+             className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-neutral-900/90 backdrop-blur-xl border border-white/10 rounded-full px-8 py-4 shadow-2xl flex items-center gap-6"
+           >
+             <div className="flex gap-1 h-6 items-center">
+                {[1,2,3,4,5].map(i => (
+                  <motion.div 
+                    key={i}
+                    className="w-1.5 bg-blue-500 rounded-full"
+                    animate={{ height: [6, 24, 6] }}
+                    transition={{ duration: 0.5 + Math.random() * 0.5, repeat: Infinity }}
+                  />
+                ))}
              </div>
-          </div>
-        </motion.div>
+             <div>
+               <div className="text-sm font-medium text-white">JARVIS vous écoute...</div>
+               <div className="text-xs text-neutral-500 font-mono">SESSION: {voiceTimeRemaining}s</div>
+             </div>
+             <button 
+               onClick={handleEndVoice}
+               className="w-8 h-8 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+             >
+               <div className="w-3 h-3 bg-current rounded-sm" />
+             </button>
+           </motion.div>
+        )}
       </section>
 
       {/* 🎯 LOGOS / TRUST */}
