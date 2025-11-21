@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { getSupabaseSingleton } from '@/lib/supabase-singleton';
 
 interface ContactFormProps {
-  leadType?: 'pilot' | 'demo' | 'contact';
+  leadType?: 'pilot' | 'demo' | 'contact' | 'enterprise';
   className?: string;
 }
 
@@ -78,6 +78,7 @@ export default function ContactForm({ leadType = 'pilot', className = '' }: Cont
       case 'loading': return '⏳ Envoi en cours...';
       case 'success': return '✅ Demande envoyée !';
       case 'error': return '❌ Erreur - Réessayer';
+      case 'enterprise': return '🏢 Contacter l\'équipe Enterprise';
       default: return leadType === 'pilot' ? '🚀 Candidater au programme pilote' : '📩 Envoyer ma demande';
     }
   };
