@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { ArrowRight, Check, Dumbbell, Hotel, ShoppingBag, Terminal, XCircle } from "lucide-react";
+import { ArrowRight, Check, Dumbbell, Hotel, ShoppingBag, Terminal, XCircle, Shield, Lock, ChevronDown, Activity } from "lucide-react";
 
 // 🎯 DYNAMIC IMPORTS
 const VoiceVitrineInterface = dynamic(
@@ -25,6 +25,7 @@ const ContactForm = dynamic(
 // 💫 BACKGROUND IMPORTS
 import { StarsBackground } from "@/components/ui/stars-background";
 import { ShootingStars } from "@/components/ui/shooting-stars";
+import { StickyScroll } from "@/components/ui/sticky-scroll-reveal";
 
 // 🎯 HOOKS
 import { useVoiceVitrineChat } from "@/hooks/useVoiceVitrineChat";
@@ -36,37 +37,6 @@ declare global {
 }
 
 // --- COMPONENTS UTILITAIRES ---
-
-const TiltCard = ({ children, className }: { children: React.ReactNode; className?: string }) => {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
-  const mouseY = useSpring(y, { stiffness: 500, damping: 100 });
-
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
-    const { left, top, width, height } = currentTarget.getBoundingClientRect();
-    x.set(clientX - left - width / 2);
-    y.set(clientY - top - height / 2);
-  }
-
-  return (
-    <motion.div
-      className={className}
-      onMouseMove={onMouseMove}
-      onMouseLeave={() => {
-        x.set(0);
-        y.set(0);
-      }}
-      style={{
-        rotateX: useTransform(mouseY, [-0.5, 0.5], ["17.5deg", "-17.5deg"]),
-        rotateY: useTransform(mouseX, [-0.5, 0.5], ["-17.5deg", "17.5deg"]),
-      }}
-    >
-      {children}
-    </motion.div>
-  );
-};
 
 const CodeBlock = () => {
   const [activeLine, setActiveLine] = useState(0);
@@ -104,6 +74,76 @@ const CodeBlock = () => {
   );
 };
 
+// --- USE CASE DATA ---
+const useCaseContent = [
+  {
+    title: "Fitness & Wellness",
+    description:
+      "Notre verticale historique. Détection de churn, coaching assisté par IA, et gestion autonome des réservations. Production Ready et déployé dans les plus grandes franchises.",
+    content: (
+      <div className="h-full w-full bg-[linear-gradient(to_bottom_right,var(--cyan-500),var(--emerald-500))] flex items-center justify-center text-white p-8">
+        <Dumbbell className="w-20 h-20 mb-4 opacity-80" />
+        <div className="text-center">
+          <div className="text-2xl font-bold">-30% Churn</div>
+          <div className="text-sm opacity-75">Sur 6 mois</div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: "Retail & Luxury",
+    description:
+      "Assistant de vente augmenté. Recommandation produit basée sur l'historique et l'analyse sentimentale en temps réel. Créez une expérience client inoubliable et personnalisée.",
+    content: (
+      <div className="h-full w-full bg-[linear-gradient(to_bottom_right,var(--orange-500),var(--yellow-500))] flex items-center justify-center text-white p-8">
+        <ShoppingBag className="w-20 h-20 mb-4 opacity-80" />
+        <div className="text-center">
+          <div className="text-2xl font-bold">+15% Panier Moyen</div>
+          <div className="text-sm opacity-75">Cross-sell IA</div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: "Hospitality",
+    description:
+      "Conciergerie 2.0. Check-in/out autonome, réservation de services et recommandations locales personnalisées. Disponible 24/7 dans toutes les langues.",
+    content: (
+      <div className="h-full w-full bg-[linear-gradient(to_bottom_right,var(--pink-500),var(--indigo-500))] flex items-center justify-center text-white p-8">
+        <Hotel className="w-20 h-20 mb-4 opacity-80" />
+        <div className="text-center">
+          <div className="text-2xl font-bold">24/7 Support</div>
+          <div className="text-sm opacity-75">Multilingue</div>
+        </div>
+      </div>
+    ),
+  },
+];
+
+// --- FAQ DATA ---
+const faqData = [
+  {
+    question: "Est-ce que JARVIS remplace mes coachs ?",
+    answer: "Non, JARVIS est conçu pour être un intendant et un assistant. Il gère les tâches répétitives (réservations, informations horaires, FAQ basique) pour libérer vos coachs afin qu'ils se concentrent sur l'humain et le coaching sportif."
+  },
+  {
+    question: "Comment sont gérées les données vocales ?",
+    answer: "La confidentialité est notre priorité. Les données vocales sont traitées en temps réel et ne sont pas stockées de manière persistante sauf si nécessaire pour le service (avec consentement). Tout est chiffré de bout en bout."
+  },
+  {
+    question: "Est-ce compatible avec mon logiciel de gestion ?",
+    answer: "Oui, JARVIS utilise le protocole MCP pour se connecter à n'importe quelle API (Resamania, Heitz, Mindbody, etc.). Nous développons des connecteurs sur mesure si besoin."
+  },
+  {
+    question: "Que se passe-t-il s'il y a du bruit dans la salle ?",
+    answer: "Notre système de reconnaissance vocale utilise des modèles avancés (Whisper) avec suppression de bruit active, testés spécifiquement dans des environnements bruyants comme les salles de sport."
+  },
+  {
+    question: "Quel est le modèle de pricing ?",
+    answer: "Nous fonctionnons sur un modèle hybride : un coût d'installation initial (matériel + setup) et un abonnement mensuel par salle qui couvre les licences logicielles, la maintenance et les coûts d'API IA."
+  }
+];
+
 export default function LandingClientResendStyle() {
   // 🎤 VOICE STATE
   const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -112,6 +152,9 @@ export default function LandingClientResendStyle() {
   const [voiceTimeRemaining, setVoiceTimeRemaining] = useState(300);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  // FAQ STATE
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   // 🎢 SCROLL PARALLAX SETUP
   const targetRef = useRef(null);
@@ -521,7 +564,7 @@ export default function LandingClientResendStyle() {
         </div>
       </section>
 
-      {/* 🎯 USE CASES - TILT CARDS */}
+      {/* 🎯 USE CASES - STICKY SCROLL REVEAL (NEW DESIGN) */}
       <section id="showcase" className="py-32 relative z-10 border-t border-white/5 bg-neutral-950/50 backdrop-blur-lg">
          <div className="max-w-7xl mx-auto px-6">
            <motion.div 
@@ -531,83 +574,34 @@ export default function LandingClientResendStyle() {
              <h2 className="text-3xl md:text-5xl font-bold mb-6">Une infrastructure, <br/><span className="text-neutral-500">plusieurs réalités.</span></h2>
              <p className="text-neutral-400 max-w-2xl text-lg mx-auto">
                JARVIS n'est pas juste une application, c'est une couche d'intelligence modulaire. 
-               Commencez avec notre module Fitness éprouvé, ou construisez votre propre verticale.
+               Découvrez comment nous transformons différentes industries.
              </p>
            </motion.div>
 
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Card 1: FITNESS (Active) */}
-              <TiltCard className="md:col-span-2 bg-gradient-to-br from-neutral-900 to-black border border-white/10 rounded-3xl p-10 relative overflow-hidden group hover:border-white/20 transition-colors">
-                 <div className="absolute top-0 right-0 p-6">
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">
-                      <Check className="w-3 h-3" /> Production Ready
-                    </span>
-                 </div>
-                 <div className="h-full flex flex-col justify-between relative z-10">
-                    <div className="mb-12">
-                       <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-6 text-blue-400">
-                          <Dumbbell className="w-6 h-6" />
-                       </div>
-                       <h3 className="text-3xl font-bold mb-4">Fitness & Wellness</h3>
-                       <p className="text-neutral-400 max-w-lg text-lg">
-                          Notre verticale historique. Détection de churn, coaching assisté par IA, et gestion autonome des réservations.
-                       </p>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-4 border-t border-white/10 pt-8">
-                       <div>
-                          <div className="text-3xl font-bold text-white">-30%</div>
-                          <div className="text-xs text-neutral-500 uppercase tracking-wider mt-1">Churn Rate</div>
-                       </div>
-                       <div>
-                          <div className="text-3xl font-bold text-white">24/7</div>
-                          <div className="text-xs text-neutral-500 uppercase tracking-wider mt-1">Disponibilité</div>
-                       </div>
-                       <div>
-                          <div className="text-3xl font-bold text-white">ROI</div>
-                          <div className="text-xs text-neutral-500 uppercase tracking-wider mt-1">Month 1</div>
-                       </div>
-                    </div>
-                 </div>
-                 {/* Background Pattern */}
-                 <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-              </TiltCard>
-
-              {/* Card 2: RETAIL (Coming Soon) */}
-              <TiltCard className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-colors">
-                 <div className="absolute top-0 right-0 p-6">
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800 text-neutral-400 text-xs font-medium border border-neutral-700">
-                      Coming Soon
-                    </span>
-                 </div>
-                 <div className="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center mb-6 text-purple-400">
-                    <ShoppingBag className="w-6 h-6" />
-                 </div>
-                 <h3 className="text-xl font-bold mb-2">Retail & Luxury</h3>
-                 <p className="text-neutral-400 text-sm mb-8">
-                    Assistant de vente augmenté. Recommandation produit basée sur l'historique et l'analyse sentimentale en temps réel.
-                 </p>
-                 <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 to-transparent" />
-              </TiltCard>
-
-              {/* Card 3: HOSPITALITY (Coming Soon) */}
-              <TiltCard className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-colors">
-                 <div className="absolute top-0 right-0 p-6">
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800 text-neutral-400 text-xs font-medium border border-neutral-700">
-                      Coming Soon
-                    </span>
-                 </div>
-                 <div className="w-12 h-12 bg-orange-500/20 rounded-2xl flex items-center justify-center mb-6 text-orange-400">
-                    <Hotel className="w-6 h-6" />
-                 </div>
-                 <h3 className="text-xl font-bold mb-2">Hospitality</h3>
-                 <p className="text-neutral-400 text-sm mb-8">
-                    Conciergerie 2.0. Check-in/out autonome, réservation de services et recommandations locales personnalisées.
-                 </p>
-                 <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 to-transparent" />
-              </TiltCard>
-           </div>
+           {/* Sticky Scroll Component */}
+           <StickyScroll content={useCaseContent} />
          </div>
+      </section>
+
+      {/* 🎯 INTEGRATIONS (MARQUEE) */}
+      <section className="py-20 border-t border-white/10 bg-black relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 text-center mb-12">
+          <h3 className="text-lg font-bold text-neutral-400 tracking-wider mb-2">INTÉGRATIONS NATIVES</h3>
+          <p className="text-neutral-500">Connectez JARVIS à votre écosystème existant.</p>
+        </div>
+        
+        <div className="relative flex overflow-x-hidden">
+          <div className="animate-marquee whitespace-nowrap flex items-center gap-16">
+            {/* First Loop */}
+            {['RESAMANIA', 'HEITZ', 'MINDBODY', 'XPLOR', 'GOOGLE CALENDAR', 'NOTION', 'HUBSPOT', 'ZAPIER'].map((logo, i) => (
+              <span key={i} className="text-2xl font-mono font-bold text-white/30 mx-4">{logo}</span>
+            ))}
+            {/* Second Loop for seamless scroll */}
+            {['RESAMANIA', 'HEITZ', 'MINDBODY', 'XPLOR', 'GOOGLE CALENDAR', 'NOTION', 'HUBSPOT', 'ZAPIER'].map((logo, i) => (
+              <span key={`dup-${i}`} className="text-2xl font-mono font-bold text-white/30 mx-4">{logo}</span>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* 🎯 DEVELOPER / INFRASTRUCTURE SECTION */}
@@ -684,6 +678,71 @@ export default function LandingClientResendStyle() {
                </div>
             </motion.div>
          </div>
+      </section>
+
+      {/* 🎯 SECURITY SECTION */}
+      <section className="py-24 bg-neutral-950 border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10">
+              <Shield className="w-10 h-10 text-blue-400 mb-6" />
+              <h3 className="text-xl font-bold mb-3">GDPR Compliant</h3>
+              <p className="text-neutral-400 text-sm leading-relaxed">
+                Conformité totale avec les régulations européennes. Gestion fine des consentements et droit à l'oubli intégré nativement.
+              </p>
+            </div>
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10">
+              <Lock className="w-10 h-10 text-purple-400 mb-6" />
+              <h3 className="text-xl font-bold mb-3">End-to-End Encryption</h3>
+              <p className="text-neutral-400 text-sm leading-relaxed">
+                Toutes les données transitent via TLS 1.3. Les clés API sont stockées dans des coffres-forts sécurisés (Vault).
+              </p>
+            </div>
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10">
+              <Activity className="w-10 h-10 text-green-400 mb-6" />
+              <h3 className="text-xl font-bold mb-3">99.9% Uptime</h3>
+              <p className="text-neutral-400 text-sm leading-relaxed">
+                Infrastructure redondante sur Vercel Edge Network. Monitoring pro-actif 24/7 pour garantir la disponibilité.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 🎯 FAQ SECTION */}
+      <section className="py-32 relative z-10 bg-black">
+        <div className="max-w-3xl mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Questions Fréquentes</h2>
+          <div className="space-y-4">
+            {faqData.map((item, index) => (
+              <div key={index} className="border border-white/10 rounded-xl overflow-hidden bg-neutral-900/30">
+                <button
+                  onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+                >
+                  <span className="font-medium text-lg">{item.question}</span>
+                  <ChevronDown 
+                    className={`w-5 h-5 transition-transform duration-300 ${openFaqIndex === index ? 'rotate-180' : ''}`} 
+                  />
+                </button>
+                <AnimatePresence>
+                  {openFaqIndex === index && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="px-6 pb-6 pt-2 text-neutral-400 leading-relaxed border-t border-white/5">
+                        {item.answer}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* 🎯 CTA SECTION */}
