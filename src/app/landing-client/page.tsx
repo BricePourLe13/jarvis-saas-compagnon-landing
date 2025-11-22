@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { ArrowRight, Check, Dumbbell, Hotel, ShoppingBag, Terminal, XCircle, Shield, Lock, ChevronDown, Activity } from "lucide-react";
+import { ArrowRight, Check, Dumbbell, Hotel, ShoppingBag, Terminal, XCircle, Shield, Lock, ChevronDown, Activity, Sparkles, Zap } from "lucide-react";
 
 // 🎯 DYNAMIC IMPORTS
 const VoiceVitrineInterface = dynamic(
@@ -25,7 +25,6 @@ const ContactForm = dynamic(
 // 💫 BACKGROUND IMPORTS
 import { StarsBackground } from "@/components/ui/stars-background";
 import { ShootingStars } from "@/components/ui/shooting-stars";
-import { StickyScroll } from "@/components/ui/sticky-scroll-reveal";
 
 // 🎯 HOOKS
 import { useVoiceVitrineChat } from "@/hooks/useVoiceVitrineChat";
@@ -74,51 +73,66 @@ const CodeBlock = () => {
   );
 };
 
-// --- USE CASE DATA ---
-const useCaseContent = [
-  {
-    title: "Fitness & Wellness",
-    description:
-      "Notre verticale historique. Détection de churn, coaching assisté par IA, et gestion autonome des réservations. Production Ready et déployé dans les plus grandes franchises.",
-    content: (
-      <div className="h-full w-full bg-[linear-gradient(to_bottom_right,var(--cyan-500),var(--emerald-500))] flex items-center justify-center text-white p-8">
-        <Dumbbell className="w-20 h-20 mb-4 opacity-80" />
-        <div className="text-center">
-          <div className="text-2xl font-bold">-30% Churn</div>
-          <div className="text-sm opacity-75">Sur 6 mois</div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: "Retail & Luxury",
-    description:
-      "Assistant de vente augmenté. Recommandation produit basée sur l'historique et l'analyse sentimentale en temps réel. Créez une expérience client inoubliable et personnalisée.",
-    content: (
-      <div className="h-full w-full bg-[linear-gradient(to_bottom_right,var(--orange-500),var(--yellow-500))] flex items-center justify-center text-white p-8">
-        <ShoppingBag className="w-20 h-20 mb-4 opacity-80" />
-        <div className="text-center">
-          <div className="text-2xl font-bold">+15% Panier Moyen</div>
-          <div className="text-sm opacity-75">Cross-sell IA</div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: "Hospitality",
-    description:
-      "Conciergerie 2.0. Check-in/out autonome, réservation de services et recommandations locales personnalisées. Disponible 24/7 dans toutes les langues.",
-    content: (
-      <div className="h-full w-full bg-[linear-gradient(to_bottom_right,var(--pink-500),var(--indigo-500))] flex items-center justify-center text-white p-8">
-        <Hotel className="w-20 h-20 mb-4 opacity-80" />
-        <div className="text-center">
-          <div className="text-2xl font-bold">24/7 Support</div>
-          <div className="text-sm opacity-75">Multilingue</div>
-        </div>
-      </div>
-    ),
-  },
-];
+// Spotlight Effect Component
+const SpotlightCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
+  const divRef = useRef<HTMLDivElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [opacity, setOpacity] = useState(0);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!divRef.current || isFocused) return;
+
+    const div = divRef.current;
+    const rect = div.getBoundingClientRect();
+
+    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    setOpacity(1);
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    setOpacity(0);
+  };
+
+  const handleMouseEnter = () => {
+    setOpacity(1);
+  };
+
+  const handleMouseLeave = () => {
+    setOpacity(0);
+  };
+
+  return (
+    <div
+      ref={divRef}
+      onMouseMove={handleMouseMove}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className={`relative rounded-2xl border border-white/10 bg-neutral-900/50 overflow-hidden ${className}`}
+    >
+      <div
+        className="pointer-events-none absolute -inset-px opacity-0 transition duration-300"
+        style={{
+          opacity,
+          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(255,255,255,.1), transparent 40%)`,
+        }}
+      />
+      <div className="relative h-full">{children}</div>
+    </div>
+  );
+};
+
+// Section Separator with Gradient
+const SectionSeparator = () => (
+  <div className="h-24 w-full bg-gradient-to-b from-black via-neutral-900/50 to-black pointer-events-none" />
+);
 
 // --- FAQ DATA ---
 const faqData = [
@@ -155,6 +169,9 @@ export default function LandingClientResendStyle() {
   
   // FAQ STATE
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  
+  // TABS STATE
+  const [activeTab, setActiveTab] = useState<'fitness' | 'retail' | 'hospitality'>('fitness');
 
   // 🎢 SCROLL PARALLAX SETUP
   const targetRef = useRef(null);
@@ -490,7 +507,7 @@ export default function LandingClientResendStyle() {
         </div>
       </section>
 
-      {/* 🎯 WHAT IS JARVIS - REFINED LAYOUT */}
+      {/* 🎯 WHAT IS JARVIS */}
       <section id="about" className="py-32 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div 
@@ -564,48 +581,179 @@ export default function LandingClientResendStyle() {
         </div>
       </section>
 
-      {/* 🎯 USE CASES - STICKY SCROLL REVEAL (NEW DESIGN) */}
-      <section id="showcase" className="py-32 relative z-10 border-t border-white/5 bg-neutral-950/50 backdrop-blur-lg">
+      <SectionSeparator />
+
+      {/* 🎯 USE CASES - NEW DESIGN (FEATURE SPOTLIGHT - FITNESS FIRST) */}
+      <section id="showcase" className="py-32 relative z-10 bg-neutral-950/50 backdrop-blur-lg">
          <div className="max-w-7xl mx-auto px-6">
            <motion.div 
              {...fadeInUp}
-             className="mb-20 text-center"
+             className="mb-16 text-center"
            >
              <h2 className="text-3xl md:text-5xl font-bold mb-6">Une infrastructure, <br/><span className="text-neutral-500">plusieurs réalités.</span></h2>
              <p className="text-neutral-400 max-w-2xl text-lg mx-auto">
-               JARVIS n'est pas juste une application, c'est une couche d'intelligence modulaire. 
-               Découvrez comment nous transformons différentes industries.
+               JARVIS s'adapte à votre industrie. Fitness d'abord, le reste du monde ensuite.
              </p>
            </motion.div>
 
-           {/* Sticky Scroll Component */}
-           <StickyScroll content={useCaseContent} />
+           {/* TABS NAVIGATION */}
+           <div className="flex justify-center mb-12">
+              <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+                 <button 
+                    onClick={() => setActiveTab('fitness')}
+                    className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'fitness' ? 'bg-white text-black shadow-lg' : 'text-neutral-400 hover:text-white'}`}
+                 >
+                    Fitness & Wellness
+                 </button>
+                 <button 
+                    onClick={() => setActiveTab('retail')}
+                    className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'retail' ? 'bg-white text-black shadow-lg' : 'text-neutral-400 hover:text-white'}`}
+                 >
+                    Retail
+                 </button>
+                 <button 
+                    onClick={() => setActiveTab('hospitality')}
+                    className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'hospitality' ? 'bg-white text-black shadow-lg' : 'text-neutral-400 hover:text-white'}`}
+                 >
+                    Hospitality
+                 </button>
+              </div>
+           </div>
+
+           {/* TAB CONTENT - FITNESS (MAIN) */}
+           <AnimatePresence mode="wait">
+             {activeTab === 'fitness' && (
+               <motion.div 
+                 key="fitness"
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -20 }}
+                 transition={{ duration: 0.5 }}
+                 className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch min-h-[500px]"
+               >
+                  <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/20 rounded-3xl p-10 flex flex-col justify-between relative overflow-hidden group">
+                     <div className="absolute top-0 right-0 p-6 z-20">
+                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium border border-blue-500/30">
+                          <Zap className="w-3 h-3 fill-current" /> Production Ready
+                        </span>
+                     </div>
+                     <div className="relative z-10">
+                        <Dumbbell className="w-16 h-16 text-blue-500 mb-8" />
+                        <h3 className="text-3xl font-bold mb-4">L'OS de votre salle.</h3>
+                        <p className="text-neutral-400 text-lg leading-relaxed mb-8">
+                           Déployé dans plus de 50 clubs. JARVIS détecte les signaux faibles de désengagement, gère les réservations de cours complexes et assiste les coachs en temps réel.
+                        </p>
+                        <ul className="space-y-4">
+                           <li className="flex items-center gap-3 text-white">
+                              <Check className="w-5 h-5 text-blue-500" />
+                              <span>Détection Churn prédictive (-30%)</span>
+                           </li>
+                           <li className="flex items-center gap-3 text-white">
+                              <Check className="w-5 h-5 text-blue-500" />
+                              <span>Réservation & Planning autonome</span>
+                           </li>
+                           <li className="flex items-center gap-3 text-white">
+                              <Check className="w-5 h-5 text-blue-500" />
+                              <span>Support niveau 1 (Horaires, Prix)</span>
+                           </li>
+                        </ul>
+                     </div>
+                     
+                     {/* Background Effect */}
+                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/40 via-transparent to-transparent opacity-50" />
+                  </div>
+
+                  <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-neutral-900">
+                     {/* Placeholder for a rich UI mockup or video */}
+                     <div className="absolute inset-0 flex items-center justify-center bg-neutral-950">
+                        <div className="text-center p-8">
+                           <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                              <Activity className="w-10 h-10 text-blue-500" />
+                           </div>
+                           <h4 className="text-xl font-medium text-white mb-2">Live Monitoring</h4>
+                           <p className="text-neutral-500 text-sm">Interaction membre en cours...</p>
+                        </div>
+                        {/* Animated data lines */}
+                        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-blue-900/20 to-transparent" />
+                     </div>
+                  </div>
+               </motion.div>
+             )}
+
+             {activeTab === 'retail' && (
+               <motion.div 
+                 key="retail"
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -20 }}
+                 transition={{ duration: 0.5 }}
+                 className="bg-neutral-900 border border-white/10 rounded-3xl p-12 text-center"
+               >
+                  <ShoppingBag className="w-16 h-16 text-purple-500 mx-auto mb-6" />
+                  <h3 className="text-2xl font-bold mb-4">Retail Intelligence</h3>
+                  <p className="text-neutral-400 max-w-2xl mx-auto mb-8">
+                     Transformez le parcours d'achat. JARVIS agit comme un personal shopper augmenté, capable de recommander des produits basés sur l'historique client et l'analyse de sentiment.
+                  </p>
+                  <span className="inline-flex px-4 py-2 rounded-full bg-white/5 text-neutral-400 text-sm border border-white/10">
+                     Disponible Q1 2026
+                  </span>
+               </motion.div>
+             )}
+
+             {activeTab === 'hospitality' && (
+               <motion.div 
+                 key="hospitality"
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -20 }}
+                 transition={{ duration: 0.5 }}
+                 className="bg-neutral-900 border border-white/10 rounded-3xl p-12 text-center"
+               >
+                  <Hotel className="w-16 h-16 text-orange-500 mx-auto mb-6" />
+                  <h3 className="text-2xl font-bold mb-4">Hospitality Concierge</h3>
+                  <p className="text-neutral-400 max-w-2xl mx-auto mb-8">
+                     Une conciergerie 5 étoiles, disponible 24/7. Check-in/out, réservation de restaurants, et recommandations locales personnalisées dans toutes les langues.
+                  </p>
+                  <span className="inline-flex px-4 py-2 rounded-full bg-white/5 text-neutral-400 text-sm border border-white/10">
+                     Disponible Q2 2026
+                  </span>
+               </motion.div>
+             )}
+           </AnimatePresence>
          </div>
       </section>
 
-      {/* 🎯 INTEGRATIONS (MARQUEE) */}
-      <section className="py-20 border-t border-white/10 bg-black relative overflow-hidden">
+      <SectionSeparator />
+
+      {/* 🎯 INTEGRATIONS (ANIMATED MARQUEE) */}
+      <section className="py-20 bg-black relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black z-10 pointer-events-none" />
+        
         <div className="max-w-7xl mx-auto px-6 text-center mb-12">
-          <h3 className="text-lg font-bold text-neutral-400 tracking-wider mb-2">INTÉGRATIONS NATIVES</h3>
-          <p className="text-neutral-500">Connectez JARVIS à votre écosystème existant.</p>
+          <h3 className="text-sm font-bold text-blue-500 tracking-wider uppercase mb-2 flex items-center justify-center gap-2">
+             <Sparkles className="w-4 h-4" /> Ecosystème
+          </h3>
+          <h2 className="text-2xl font-bold text-white">Intégrations Natives</h2>
         </div>
         
-        <div className="relative flex overflow-x-hidden">
-          <div className="animate-marquee whitespace-nowrap flex items-center gap-16">
+        <div className="relative flex overflow-x-hidden group">
+          <div className="animate-scroll whitespace-nowrap flex items-center gap-20 hover:[animation-play-state:paused]">
             {/* First Loop */}
-            {['RESAMANIA', 'HEITZ', 'MINDBODY', 'XPLOR', 'GOOGLE CALENDAR', 'NOTION', 'HUBSPOT', 'ZAPIER'].map((logo, i) => (
-              <span key={i} className="text-2xl font-mono font-bold text-white/30 mx-4">{logo}</span>
+            {['RESAMANIA', 'HEITZ', 'MINDBODY', 'XPLOR', 'GOOGLE CALENDAR', 'NOTION', 'HUBSPOT', 'ZAPIER', 'STRIPE', 'OPENAI'].map((logo, i) => (
+              <span key={i} className="text-2xl font-mono font-bold text-neutral-700 hover:text-white transition-colors duration-300 cursor-default select-none">{logo}</span>
             ))}
             {/* Second Loop for seamless scroll */}
-            {['RESAMANIA', 'HEITZ', 'MINDBODY', 'XPLOR', 'GOOGLE CALENDAR', 'NOTION', 'HUBSPOT', 'ZAPIER'].map((logo, i) => (
-              <span key={`dup-${i}`} className="text-2xl font-mono font-bold text-white/30 mx-4">{logo}</span>
+            {['RESAMANIA', 'HEITZ', 'MINDBODY', 'XPLOR', 'GOOGLE CALENDAR', 'NOTION', 'HUBSPOT', 'ZAPIER', 'STRIPE', 'OPENAI'].map((logo, i) => (
+              <span key={`dup-${i}`} className="text-2xl font-mono font-bold text-neutral-700 hover:text-white transition-colors duration-300 cursor-default select-none">{logo}</span>
             ))}
           </div>
         </div>
       </section>
 
+      <SectionSeparator />
+
       {/* 🎯 DEVELOPER / INFRASTRUCTURE SECTION */}
-      <section id="infrastructure" className="py-32 bg-black border-t border-white/10 relative overflow-hidden z-10">
+      <section id="infrastructure" className="py-32 bg-black relative overflow-hidden z-10">
          {/* Background Grid */}
          <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
          
@@ -680,49 +828,68 @@ export default function LandingClientResendStyle() {
          </div>
       </section>
 
-      {/* 🎯 SECURITY SECTION */}
-      <section className="py-24 bg-neutral-950 border-t border-white/5">
+      <SectionSeparator />
+
+      {/* 🎯 SECURITY SECTION (SPOTLIGHT CARDS) */}
+      <section className="py-24 bg-black relative z-10">
         <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+             <h2 className="text-3xl font-bold mb-4">Confiance & Sécurité</h2>
+             <p className="text-neutral-400">Vos données sont précieuses. Nous les protégeons.</p>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-2xl bg-white/5 border border-white/10">
+            <SpotlightCard className="p-8 h-full">
               <Shield className="w-10 h-10 text-blue-400 mb-6" />
               <h3 className="text-xl font-bold mb-3">GDPR Compliant</h3>
               <p className="text-neutral-400 text-sm leading-relaxed">
                 Conformité totale avec les régulations européennes. Gestion fine des consentements et droit à l'oubli intégré nativement.
               </p>
-            </div>
-            <div className="p-8 rounded-2xl bg-white/5 border border-white/10">
+            </SpotlightCard>
+            
+            <SpotlightCard className="p-8 h-full">
               <Lock className="w-10 h-10 text-purple-400 mb-6" />
               <h3 className="text-xl font-bold mb-3">End-to-End Encryption</h3>
               <p className="text-neutral-400 text-sm leading-relaxed">
-                Toutes les données transitent via TLS 1.3. Les clés API sont stockées dans des coffres-forts sécurisés (Vault).
+                Toutes les données transitent via TLS 1.3. Les clés API sont stockées dans des coffres-forts sécurisés (Vault) et jamais exposées.
               </p>
-            </div>
-            <div className="p-8 rounded-2xl bg-white/5 border border-white/10">
+            </SpotlightCard>
+            
+            <SpotlightCard className="p-8 h-full">
               <Activity className="w-10 h-10 text-green-400 mb-6" />
               <h3 className="text-xl font-bold mb-3">99.9% Uptime</h3>
               <p className="text-neutral-400 text-sm leading-relaxed">
-                Infrastructure redondante sur Vercel Edge Network. Monitoring pro-actif 24/7 pour garantir la disponibilité.
+                Infrastructure redondante sur Vercel Edge Network. Monitoring pro-actif 24/7 pour garantir la disponibilité de vos services.
               </p>
-            </div>
+            </SpotlightCard>
           </div>
         </div>
       </section>
 
-      {/* 🎯 FAQ SECTION */}
-      <section className="py-32 relative z-10 bg-black">
-        <div className="max-w-3xl mx-auto px-6">
+      <SectionSeparator />
+
+      {/* 🎯 FAQ SECTION (REFINED) */}
+      <section className="py-32 bg-black relative z-10">
+        <div className="max-w-2xl mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Questions Fréquentes</h2>
           <div className="space-y-4">
             {faqData.map((item, index) => (
-              <div key={index} className="border border-white/10 rounded-xl overflow-hidden bg-neutral-900/30">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                key={index} 
+                className="group border-b border-white/10"
+              >
                 <button
                   onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
-                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+                  className="w-full py-6 flex items-center justify-between text-left focus:outline-none"
                 >
-                  <span className="font-medium text-lg">{item.question}</span>
+                  <span className={`font-medium text-lg transition-colors ${openFaqIndex === index ? 'text-white' : 'text-neutral-400 group-hover:text-white'}`}>
+                    {item.question}
+                  </span>
                   <ChevronDown 
-                    className={`w-5 h-5 transition-transform duration-300 ${openFaqIndex === index ? 'rotate-180' : ''}`} 
+                    className={`w-5 h-5 text-neutral-500 transition-transform duration-300 ${openFaqIndex === index ? 'rotate-180 text-white' : ''}`} 
                   />
                 </button>
                 <AnimatePresence>
@@ -732,14 +899,15 @@ export default function LandingClientResendStyle() {
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
                     >
-                      <div className="px-6 pb-6 pt-2 text-neutral-400 leading-relaxed border-t border-white/5">
+                      <div className="pb-6 text-neutral-400 leading-relaxed">
                         {item.answer}
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
