@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { ArrowRight, Check, Dumbbell, Hotel, ShoppingBag, Terminal, XCircle } from "lucide-react";
 
-// 🎯 LAZY LOADED COMPONENTS
+// 🎯 DYNAMIC IMPORTS
 const VoiceVitrineInterface = dynamic(
   () => import("@/components/vitrine/VoiceVitrineInterface"),
   { ssr: false }
@@ -21,6 +21,10 @@ const ContactForm = dynamic(
   () => import("@/components/vitrine/ContactForm"),
   { ssr: false }
 );
+
+// 💫 BACKGROUND IMPORTS (Aceternity)
+import { StarsBackground } from "@/components/ui/stars-background";
+import { ShootingStars } from "@/components/ui/shooting-stars";
 
 // 🎯 HOOKS
 import { useVoiceVitrineChat } from "@/hooks/useVoiceVitrineChat";
@@ -40,6 +44,16 @@ export default function LandingClientResendStyle() {
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // 🎢 SCROLL PARALLAX SETUP
+  const targetRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+    offset: ["start start", "end start"]
+  });
+
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+  
   // 🎤 VOICE CHAT HOOK
   const {
     connect: connectVoice,
@@ -72,7 +86,6 @@ export default function LandingClientResendStyle() {
       setVoiceStatus('error');
       setIsVoiceActive(false);
       
-      // Gestion d'erreur améliorée
       if (error instanceof Error) {
         setErrorMessage(error.message);
       } else {
@@ -99,18 +112,44 @@ export default function LandingClientResendStyle() {
 
   // Animations sections
   const fadeInUp = {
-    initial: { opacity: 0, y: 20 },
+    initial: { opacity: 0, y: 40 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true },
-    transition: { duration: 0.6 }
+    viewport: { once: true, margin: "-100px" },
+    transition: { duration: 0.8, ease: "easeOut" }
   };
 
   return (
-    <main className="min-h-screen bg-[#000000] text-white selection:bg-white/20 selection:text-white font-sans antialiased overflow-x-hidden">
+    <main ref={targetRef} className="min-h-screen bg-[#000000] text-white selection:bg-white/20 selection:text-white font-sans antialiased overflow-x-hidden relative">
       
-      {/* 🎯 HEADER RESEND STYLE - UPDATED */}
+      {/* 💫 DYNAMIC BACKGROUND (Fixes "static" feel) */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <StarsBackground 
+          starDensity={0.0002} 
+          allStarsTwinkle={true} 
+          twinkleProbability={0.8} 
+          minTwinkleSpeed={0.8} 
+          maxTwinkleSpeed={2}
+          className="opacity-60"
+        />
+        <ShootingStars 
+          starColor="#4F46E5" 
+          trailColor="#2563EB" 
+          minSpeed={15} 
+          maxSpeed={35} 
+          minDelay={2000} 
+          maxDelay={5000}
+          className="opacity-40" 
+        />
+      </div>
+
+      {/* 🎯 HEADER */}
       <header className="fixed top-6 left-0 right-0 z-50 px-6 flex justify-center">
-        <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-full px-6 h-14 flex items-center gap-8 shadow-2xl max-w-4xl w-full justify-between">
+        <motion.div 
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-6 h-14 flex items-center gap-8 shadow-2xl max-w-4xl w-full justify-between"
+        >
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
                <Image 
@@ -142,10 +181,10 @@ export default function LandingClientResendStyle() {
                Get Started
              </a>
           </div>
-        </div>
+        </motion.div>
       </header>
 
-      {/* ERROR TOAST NOTIFICATION */}
+      {/* ERROR TOAST */}
       <AnimatePresence>
         {errorMessage && (
           <motion.div 
@@ -169,15 +208,21 @@ export default function LandingClientResendStyle() {
         )}
       </AnimatePresence>
 
-      {/* 🎯 HERO SECTION - REFINED */}
-      <section className="relative pt-40 pb-20 lg:pt-56 lg:pb-32 overflow-hidden">
-        {/* Improved Glow Effect */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none" />
+      {/* 🎯 HERO SECTION - WITH PARALLAX */}
+      <section className="relative pt-40 pb-20 lg:pt-56 lg:pb-32 overflow-hidden min-h-screen flex items-center">
+        {/* Glow Effect (kept but subtle) */}
+        <motion.div 
+          style={{ y: heroY }}
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none z-0" 
+        />
         
-        <div className="max-w-7xl mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="max-w-7xl mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center w-full">
           
           {/* Left: Text Content */}
-          <div className="space-y-10 text-center lg:text-left">
+          <motion.div 
+            style={{ y: textY }}
+            className="space-y-10 text-center lg:text-left"
+          >
             {/* Badge */}
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
@@ -191,11 +236,11 @@ export default function LandingClientResendStyle() {
               v2.0 Infra is Live
             </motion.div>
 
-            {/* Headline - Reduced size as requested */}
+            {/* Headline */}
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.1, duration: 0.8 }}
               className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.1]"
             >
               L'Infrastructure IA Vocale<br />
@@ -206,7 +251,7 @@ export default function LandingClientResendStyle() {
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
               className="text-lg md:text-xl text-neutral-400 max-w-xl leading-relaxed mx-auto lg:mx-0"
             >
               Transformez vos lieux en expériences intelligentes. 
@@ -219,7 +264,7 @@ export default function LandingClientResendStyle() {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
               className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start"
             >
               <button 
@@ -236,13 +281,14 @@ export default function LandingClientResendStyle() {
                 Découvrir Jarvis
               </a>
             </motion.div>
-          </div>
+          </motion.div>
 
-          {/* Right: 3D SPHERE */}
+          {/* Right: 3D SPHERE - Parallaxed */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, duration: 0.8 }}
+            style={{ y: heroY }}
             className="relative flex items-center justify-center lg:justify-end"
           >
             <div 
@@ -304,8 +350,8 @@ export default function LandingClientResendStyle() {
         )}
       </section>
 
-      {/* 🎯 LOGOS / TRUST - UPDATED */}
-      <section className="py-10 border-y border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent">
+      {/* 🎯 LOGOS / TRUST */}
+      <section className="py-10 border-y border-white/5 bg-black/50 backdrop-blur-sm relative z-10">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <p className="text-sm text-neutral-500 font-medium mb-8 tracking-wider">DEPLOYED IN PREMIER FITNESS LOCATIONS</p>
           <div className="flex flex-wrap justify-center gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
@@ -316,10 +362,9 @@ export default function LandingClientResendStyle() {
         </div>
       </section>
 
-      {/* 🎯 WHAT IS JARVIS (NEW SECTION) */}
-      <section id="about" className="py-32 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-black to-neutral-950" />
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
+      {/* 🎯 WHAT IS JARVIS - REFINED LAYOUT */}
+      <section id="about" className="py-32 relative z-10">
+        <div className="max-w-7xl mx-auto px-6">
           <motion.div 
             {...fadeInUp}
             className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center"
@@ -343,17 +388,28 @@ export default function LandingClientResendStyle() {
                     'Actions réelles via APIs',
                     'Hardware premium inclus'
                   ].map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 text-white/90">
+                    <motion.li 
+                      key={i} 
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="flex items-center gap-3 text-white/90"
+                    >
                        <Check className="w-5 h-5 text-blue-500" />
                        {item}
-                    </li>
+                    </motion.li>
                   ))}
                 </ul>
               </div>
             </div>
             
-            <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-2xl" />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, rotateY: 10 }}
+              whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
+              transition={{ duration: 1 }}
+              className="relative perspective-1000"
+            >
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-3xl" />
               <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black">
                 <Image 
                   src="/images/jarvis-mirror.png" 
@@ -375,108 +431,130 @@ export default function LandingClientResendStyle() {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* 🎯 BENTO GRID USE CASES */}
-      <section id="showcase" className="py-32 max-w-7xl mx-auto px-6 border-t border-white/5 bg-neutral-950">
-         <div className="mb-20">
-           <h2 className="text-3xl md:text-4xl font-bold mb-6">Une infrastructure, <br/><span className="text-neutral-500">plusieurs réalités.</span></h2>
-           <p className="text-neutral-400 max-w-2xl text-lg">JARVIS n'est pas juste une application, c'est une couche d'intelligence modulaire. Commencez avec notre module Fitness éprouvé, ou construisez votre propre verticale.</p>
-         </div>
+      {/* 🎯 USE CASES - IMPROVED LAYOUT */}
+      <section id="showcase" className="py-32 relative z-10 border-t border-white/5 bg-neutral-950/50 backdrop-blur-lg">
+         <div className="max-w-7xl mx-auto px-6">
+           <motion.div 
+             {...fadeInUp}
+             className="mb-20 text-center"
+           >
+             <h2 className="text-3xl md:text-5xl font-bold mb-6">Une infrastructure, <br/><span className="text-neutral-500">plusieurs réalités.</span></h2>
+             <p className="text-neutral-400 max-w-2xl text-lg mx-auto">
+               JARVIS n'est pas juste une application, c'est une couche d'intelligence modulaire. 
+               Commencez avec notre module Fitness éprouvé, ou construisez votre propre verticale.
+             </p>
+           </motion.div>
 
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Card 1: FITNESS (Active) */}
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="md:col-span-2 bg-gradient-to-br from-neutral-900 to-black border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all duration-300"
-            >
-               <div className="absolute top-0 right-0 p-6">
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">
-                    <Check className="w-3 h-3" /> Production Ready
-                  </span>
-               </div>
-               <div className="h-full flex flex-col justify-between relative z-10">
-                  <div className="mb-12">
-                     <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-6 text-blue-400">
-                        <Dumbbell className="w-6 h-6" />
-                     </div>
-                     <h3 className="text-2xl font-bold mb-2">Fitness & Wellness</h3>
-                     <p className="text-neutral-400 max-w-md">
-                        Notre verticale historique. Détection de churn, coaching assisté par IA, et gestion autonome des réservations.
-                     </p>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-4 border-t border-white/10 pt-8">
-                     <div>
-                        <div className="text-2xl font-bold text-white">-30%</div>
-                        <div className="text-xs text-neutral-500 uppercase tracking-wider mt-1">Churn Rate</div>
-                     </div>
-                     <div>
-                        <div className="text-2xl font-bold text-white">24/7</div>
-                        <div className="text-xs text-neutral-500 uppercase tracking-wider mt-1">Disponibilité</div>
-                     </div>
-                     <div>
-                        <div className="text-2xl font-bold text-white">ROI</div>
-                        <div className="text-xs text-neutral-500 uppercase tracking-wider mt-1">Month 1</div>
-                     </div>
-                  </div>
-               </div>
-               {/* Background Pattern */}
-               <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-            </motion.div>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Card 1: FITNESS (Active) */}
+              <motion.div 
+                whileHover={{ y: -10 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="md:col-span-2 bg-gradient-to-br from-neutral-900 to-black border border-white/10 rounded-3xl p-10 relative overflow-hidden group hover:border-white/20 transition-all duration-300"
+              >
+                 <div className="absolute top-0 right-0 p-6">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">
+                      <Check className="w-3 h-3" /> Production Ready
+                    </span>
+                 </div>
+                 <div className="h-full flex flex-col justify-between relative z-10">
+                    <div className="mb-12">
+                       <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-6 text-blue-400">
+                          <Dumbbell className="w-6 h-6" />
+                       </div>
+                       <h3 className="text-3xl font-bold mb-4">Fitness & Wellness</h3>
+                       <p className="text-neutral-400 max-w-lg text-lg">
+                          Notre verticale historique. Détection de churn, coaching assisté par IA, et gestion autonome des réservations.
+                       </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-4 border-t border-white/10 pt-8">
+                       <div>
+                          <div className="text-3xl font-bold text-white">-30%</div>
+                          <div className="text-xs text-neutral-500 uppercase tracking-wider mt-1">Churn Rate</div>
+                       </div>
+                       <div>
+                          <div className="text-3xl font-bold text-white">24/7</div>
+                          <div className="text-xs text-neutral-500 uppercase tracking-wider mt-1">Disponibilité</div>
+                       </div>
+                       <div>
+                          <div className="text-3xl font-bold text-white">ROI</div>
+                          <div className="text-xs text-neutral-500 uppercase tracking-wider mt-1">Month 1</div>
+                       </div>
+                    </div>
+                 </div>
+                 {/* Background Pattern */}
+                 <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              </motion.div>
 
-            {/* Card 2: RETAIL (Coming Soon) */}
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all"
-            >
-               <div className="absolute top-0 right-0 p-6">
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800 text-neutral-400 text-xs font-medium border border-neutral-700">
-                    Coming Soon
-                  </span>
-               </div>
-               <div className="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center mb-6 text-purple-400">
-                  <ShoppingBag className="w-6 h-6" />
-               </div>
-               <h3 className="text-xl font-bold mb-2">Retail & Luxury</h3>
-               <p className="text-neutral-400 text-sm mb-8">
-                  Assistant de vente augmenté. Recommandation produit basée sur l'historique et l'analyse sentimentale en temps réel.
-               </p>
-               <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 to-transparent" />
-            </motion.div>
+              {/* Card 2: RETAIL (Coming Soon) */}
+              <motion.div 
+                whileHover={{ y: -10 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all"
+              >
+                 <div className="absolute top-0 right-0 p-6">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800 text-neutral-400 text-xs font-medium border border-neutral-700">
+                      Coming Soon
+                    </span>
+                 </div>
+                 <div className="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center mb-6 text-purple-400">
+                    <ShoppingBag className="w-6 h-6" />
+                 </div>
+                 <h3 className="text-xl font-bold mb-2">Retail & Luxury</h3>
+                 <p className="text-neutral-400 text-sm mb-8">
+                    Assistant de vente augmenté. Recommandation produit basée sur l'historique et l'analyse sentimentale en temps réel.
+                 </p>
+                 <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 to-transparent" />
+              </motion.div>
 
-            {/* Card 3: HOSPITALITY (Coming Soon) */}
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all"
-            >
-               <div className="absolute top-0 right-0 p-6">
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800 text-neutral-400 text-xs font-medium border border-neutral-700">
-                    Coming Soon
-                  </span>
-               </div>
-               <div className="w-12 h-12 bg-orange-500/20 rounded-2xl flex items-center justify-center mb-6 text-orange-400">
-                  <Hotel className="w-6 h-6" />
-               </div>
-               <h3 className="text-xl font-bold mb-2">Hospitality</h3>
-               <p className="text-neutral-400 text-sm mb-8">
-                  Conciergerie 2.0. Check-in/out autonome, réservation de services et recommandations locales personnalisées.
-               </p>
-               <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 to-transparent" />
-            </motion.div>
+              {/* Card 3: HOSPITALITY (Coming Soon) */}
+              <motion.div 
+                whileHover={{ y: -10 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all"
+              >
+                 <div className="absolute top-0 right-0 p-6">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800 text-neutral-400 text-xs font-medium border border-neutral-700">
+                      Coming Soon
+                    </span>
+                 </div>
+                 <div className="w-12 h-12 bg-orange-500/20 rounded-2xl flex items-center justify-center mb-6 text-orange-400">
+                    <Hotel className="w-6 h-6" />
+                 </div>
+                 <h3 className="text-xl font-bold mb-2">Hospitality</h3>
+                 <p className="text-neutral-400 text-sm mb-8">
+                    Conciergerie 2.0. Check-in/out autonome, réservation de services et recommandations locales personnalisées.
+                 </p>
+                 <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 to-transparent" />
+              </motion.div>
+           </div>
          </div>
       </section>
 
       {/* 🎯 DEVELOPER / INFRASTRUCTURE SECTION */}
-      <section id="infrastructure" className="py-32 bg-black border-t border-white/10 relative overflow-hidden">
+      <section id="infrastructure" className="py-32 bg-black border-t border-white/10 relative overflow-hidden z-10">
          {/* Background Grid */}
          <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
          
          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
-            <div className="space-y-8">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="space-y-8"
+            >
                <div className="inline-flex items-center gap-2 text-blue-400 font-mono text-sm mb-4">
                   <Terminal className="w-4 h-4" />
                   MCP ARCHITECTURE
@@ -506,10 +584,15 @@ export default function LandingClientResendStyle() {
                <a href="#" className="inline-flex items-center gap-2 text-white font-medium border-b border-white/20 pb-0.5 hover:border-white transition-colors">
                   Lire la documentation technique <ArrowRight className="w-4 h-4" />
                </a>
-            </div>
+            </motion.div>
 
             {/* CODE BLOCK VISUAL */}
-            <div className="relative group">
+            <motion.div 
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="relative group"
+            >
                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl opacity-20 blur transition duration-1000 group-hover:opacity-40"></div>
                <div className="relative bg-[#0A0A0A] rounded-xl border border-white/10 p-6 font-mono text-sm overflow-hidden shadow-2xl">
                   <div className="flex items-center gap-2 mb-6 border-b border-white/5 pb-4">
@@ -547,28 +630,32 @@ export default function LandingClientResendStyle() {
                      Tool Executed Successfully
                   </motion.div>
                </div>
-            </div>
+            </motion.div>
          </div>
       </section>
 
       {/* 🎯 CTA SECTION */}
-      <section id="contact" className="py-32 relative overflow-hidden">
+      <section id="contact" className="py-32 relative overflow-hidden z-10">
          <div className="absolute inset-0 bg-blue-600/5" />
          <div className="max-w-3xl mx-auto px-6 relative z-10 text-center">
-            <h2 className="text-4xl font-bold mb-6">Prêt à moderniser vos espaces ?</h2>
-            <p className="text-neutral-400 mb-10 text-lg">
-               Nous acceptons actuellement de nouveaux partenaires pour notre programme Fitness Enterprise. 
-               Pour les autres verticales, rejoignez la liste d'attente.
-            </p>
-            
-            <div className="bg-black border border-white/10 rounded-2xl p-8 md:p-12 shadow-2xl">
-               <ContactForm leadType="enterprise" />
-            </div>
+            <motion.div
+              {...fadeInUp}
+            >
+              <h2 className="text-4xl font-bold mb-6">Prêt à moderniser vos espaces ?</h2>
+              <p className="text-neutral-400 mb-10 text-lg">
+                 Nous acceptons actuellement de nouveaux partenaires pour notre programme Fitness Enterprise. 
+                 Pour les autres verticales, rejoignez la liste d'attente.
+              </p>
+              
+              <div className="bg-black border border-white/10 rounded-2xl p-8 md:p-12 shadow-2xl">
+                 <ContactForm leadType="enterprise" />
+              </div>
+            </motion.div>
          </div>
       </section>
 
       {/* 🎯 FOOTER */}
-      <footer className="py-12 border-t border-white/10 bg-black text-neutral-500 text-sm">
+      <footer className="py-12 border-t border-white/10 bg-black text-neutral-500 text-sm relative z-10">
          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-2">
                <div className="w-4 h-4 bg-neutral-800 rounded-full" />
