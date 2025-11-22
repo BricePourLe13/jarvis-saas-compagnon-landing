@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { ArrowRight, Check, Dumbbell, Hotel, ShoppingBag, Terminal, XCircle } from "lucide-react";
@@ -22,7 +22,7 @@ const ContactForm = dynamic(
   { ssr: false }
 );
 
-// 💫 BACKGROUND IMPORTS (Aceternity)
+// 💫 BACKGROUND IMPORTS
 import { StarsBackground } from "@/components/ui/stars-background";
 import { ShootingStars } from "@/components/ui/shooting-stars";
 
@@ -34,6 +34,75 @@ declare global {
     voiceTimer?: ReturnType<typeof setInterval> | null
   }
 }
+
+// --- COMPONENTS UTILITAIRES ---
+
+const TiltCard = ({ children, className }: { children: React.ReactNode; className?: string }) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
+  const mouseY = useSpring(y, { stiffness: 500, damping: 100 });
+
+  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
+    const { left, top, width, height } = currentTarget.getBoundingClientRect();
+    x.set(clientX - left - width / 2);
+    y.set(clientY - top - height / 2);
+  }
+
+  return (
+    <motion.div
+      className={className}
+      onMouseMove={onMouseMove}
+      onMouseLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+      style={{
+        rotateX: useTransform(mouseY, [-0.5, 0.5], ["17.5deg", "-17.5deg"]),
+        rotateY: useTransform(mouseX, [-0.5, 0.5], ["-17.5deg", "17.5deg"]),
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const CodeBlock = () => {
+  const [activeLine, setActiveLine] = useState(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveLine(prev => (prev + 1) % 6);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const codeLines = [
+    { text: '"tools": [', color: 'text-purple-400' },
+    { text: '  { "name": "book_class",', color: 'text-blue-400' },
+    { text: '    "description": "Réserve un cours",', color: 'text-green-400' },
+    { text: '    "parameters": { "type": "object" }', color: 'text-neutral-400' },
+    { text: '  },', color: 'text-neutral-400' },
+    { text: ']', color: 'text-purple-400' },
+  ];
+
+  return (
+    <div className="font-mono text-sm space-y-2">
+      {codeLines.map((line, i) => (
+        <motion.div 
+          key={i}
+          initial={{ opacity: 0.5 }}
+          animate={{ opacity: activeLine === i ? 1 : 0.5, x: activeLine === i ? 10 : 0 }}
+          className={`transition-all duration-300 ${line.color} flex items-center gap-2`}
+        >
+          {activeLine === i && <motion.div layoutId="cursor" className="w-1 h-4 bg-blue-500" />}
+          {line.text}
+        </motion.div>
+      ))}
+    </div>
+  );
+};
 
 export default function LandingClientResendStyle() {
   // 🎤 VOICE STATE
@@ -121,7 +190,7 @@ export default function LandingClientResendStyle() {
   return (
     <main ref={targetRef} className="min-h-screen bg-[#000000] text-white selection:bg-white/20 selection:text-white font-sans antialiased overflow-x-hidden relative">
       
-      {/* 💫 DYNAMIC BACKGROUND (Fixes "static" feel) */}
+      {/* 💫 DYNAMIC BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <StarsBackground 
           starDensity={0.0002} 
@@ -142,32 +211,35 @@ export default function LandingClientResendStyle() {
         />
       </div>
 
-      {/* 🎯 HEADER */}
+      {/* 🎯 HEADER - CENTERED LAYOUT */}
       <header className="fixed top-6 left-0 right-0 z-50 px-6 flex justify-center">
         <motion.div 
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-6 h-14 flex items-center gap-8 shadow-2xl max-w-4xl w-full justify-between"
+          className="bg-black/70 backdrop-blur-xl border border-white/10 rounded-full px-6 h-14 grid grid-cols-3 items-center shadow-2xl max-w-5xl w-full"
         >
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2">
-               <Image 
-                 src="/logo_jarvis.png" 
-                 alt="JARVIS Logo" 
-                 width={24} 
-                 height={24} 
-                 className="w-6 h-6"
-               />
-               <span className="font-bold text-lg tracking-tight">JARVIS</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-neutral-400">
-              <a href="#about" className="hover:text-white transition-colors">Solution</a>
-              <a href="#showcase" className="hover:text-white transition-colors">Use Cases</a>
-              <a href="#infrastructure" className="hover:text-white transition-colors">Developers</a>
-            </nav>
+          {/* Left: Logo */}
+          <div className="flex items-center justify-start gap-2">
+             <Image 
+               src="/logo_jarvis.png" 
+               alt="JARVIS Logo" 
+               width={24} 
+               height={24} 
+               className="w-6 h-6"
+             />
+             <span className="font-bold text-lg tracking-tight hidden sm:block">JARVIS</span>
           </div>
-          <div className="flex items-center gap-4">
+
+          {/* Center: Nav Links */}
+          <nav className="hidden md:flex items-center justify-center gap-8 text-sm font-medium text-neutral-400">
+            <a href="#about" className="hover:text-white transition-colors hover:scale-105 transform">Solution</a>
+            <a href="#showcase" className="hover:text-white transition-colors hover:scale-105 transform">Use Cases</a>
+            <a href="#infrastructure" className="hover:text-white transition-colors hover:scale-105 transform">Developers</a>
+          </nav>
+
+          {/* Right: Actions */}
+          <div className="flex items-center justify-end gap-4">
              <a 
                href="https://app.jarvis-group.net" 
                className="text-sm text-neutral-400 hover:text-white transition-colors hidden sm:block"
@@ -176,7 +248,7 @@ export default function LandingClientResendStyle() {
              </a>
              <a 
                href="#contact"
-               className="text-sm font-medium bg-white text-black px-5 py-2 rounded-full hover:bg-neutral-200 transition-colors"
+               className="text-sm font-medium bg-white text-black px-5 py-2 rounded-full hover:bg-neutral-200 transition-all hover:scale-105 active:scale-95"
              >
                Get Started
              </a>
@@ -208,9 +280,9 @@ export default function LandingClientResendStyle() {
         )}
       </AnimatePresence>
 
-      {/* 🎯 HERO SECTION - WITH PARALLAX */}
+      {/* 🎯 HERO SECTION - WITH PARALLAX & TEXT REVEAL */}
       <section className="relative pt-40 pb-20 lg:pt-56 lg:pb-32 overflow-hidden min-h-screen flex items-center">
-        {/* Glow Effect (kept but subtle) */}
+        {/* Glow Effect */}
         <motion.div 
           style={{ y: heroY }}
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none z-0" 
@@ -236,22 +308,35 @@ export default function LandingClientResendStyle() {
               v2.0 Infra is Live
             </motion.div>
 
-            {/* Headline */}
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.8 }}
-              className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.1]"
-            >
-              L'Infrastructure IA Vocale<br />
-              <span className="text-neutral-500">pour vos Espaces Physiques.</span>
-            </motion.h1>
+            {/* Headline - Animated Stagger */}
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.1]">
+              {["L'Infrastructure", "IA", "Vocale"].map((word, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.1, duration: 0.6 }}
+                  className="inline-block mr-3"
+                >
+                  {word}
+                </motion.span>
+              ))}
+              <br />
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="text-neutral-500"
+              >
+                pour vos Espaces Physiques.
+              </motion.span>
+            </h1>
 
             {/* Subheadline */}
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
               className="text-lg md:text-xl text-neutral-400 max-w-xl leading-relaxed mx-auto lg:mx-0"
             >
               Transformez vos lieux en expériences intelligentes. 
@@ -264,12 +349,12 @@ export default function LandingClientResendStyle() {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
+              transition={{ delay: 0.8, duration: 0.8 }}
               className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start"
             >
               <button 
                 onClick={handleStartVoice}
-                className="h-12 px-8 rounded-full bg-white text-black font-semibold hover:bg-neutral-200 transition-all flex items-center gap-2 group shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]"
+                className="h-12 px-8 rounded-full bg-white text-black font-semibold hover:bg-neutral-200 transition-all flex items-center gap-2 group shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] active:scale-95"
               >
                 Tester la démo vocale
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -436,7 +521,7 @@ export default function LandingClientResendStyle() {
         </div>
       </section>
 
-      {/* 🎯 USE CASES - IMPROVED LAYOUT */}
+      {/* 🎯 USE CASES - TILT CARDS */}
       <section id="showcase" className="py-32 relative z-10 border-t border-white/5 bg-neutral-950/50 backdrop-blur-lg">
          <div className="max-w-7xl mx-auto px-6">
            <motion.div 
@@ -452,13 +537,7 @@ export default function LandingClientResendStyle() {
 
            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Card 1: FITNESS (Active) */}
-              <motion.div 
-                whileHover={{ y: -10 }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="md:col-span-2 bg-gradient-to-br from-neutral-900 to-black border border-white/10 rounded-3xl p-10 relative overflow-hidden group hover:border-white/20 transition-all duration-300"
-              >
+              <TiltCard className="md:col-span-2 bg-gradient-to-br from-neutral-900 to-black border border-white/10 rounded-3xl p-10 relative overflow-hidden group hover:border-white/20 transition-colors">
                  <div className="absolute top-0 right-0 p-6">
                     <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">
                       <Check className="w-3 h-3" /> Production Ready
@@ -492,16 +571,10 @@ export default function LandingClientResendStyle() {
                  </div>
                  {/* Background Pattern */}
                  <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-              </motion.div>
+              </TiltCard>
 
               {/* Card 2: RETAIL (Coming Soon) */}
-              <motion.div 
-                whileHover={{ y: -10 }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all"
-              >
+              <TiltCard className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-colors">
                  <div className="absolute top-0 right-0 p-6">
                     <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800 text-neutral-400 text-xs font-medium border border-neutral-700">
                       Coming Soon
@@ -515,16 +588,10 @@ export default function LandingClientResendStyle() {
                     Assistant de vente augmenté. Recommandation produit basée sur l'historique et l'analyse sentimentale en temps réel.
                  </p>
                  <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 to-transparent" />
-              </motion.div>
+              </TiltCard>
 
               {/* Card 3: HOSPITALITY (Coming Soon) */}
-              <motion.div 
-                whileHover={{ y: -10 }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all"
-              >
+              <TiltCard className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-colors">
                  <div className="absolute top-0 right-0 p-6">
                     <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800 text-neutral-400 text-xs font-medium border border-neutral-700">
                       Coming Soon
@@ -538,7 +605,7 @@ export default function LandingClientResendStyle() {
                     Conciergerie 2.0. Check-in/out autonome, réservation de services et recommandations locales personnalisées.
                  </p>
                  <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 to-transparent" />
-              </motion.div>
+              </TiltCard>
            </div>
          </div>
       </section>
@@ -594,7 +661,7 @@ export default function LandingClientResendStyle() {
               className="relative group"
             >
                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl opacity-20 blur transition duration-1000 group-hover:opacity-40"></div>
-               <div className="relative bg-[#0A0A0A] rounded-xl border border-white/10 p-6 font-mono text-sm overflow-hidden shadow-2xl">
+               <div className="relative bg-[#0A0A0A] rounded-xl border border-white/10 p-6 overflow-hidden shadow-2xl min-h-[300px]">
                   <div className="flex items-center gap-2 mb-6 border-b border-white/5 pb-4">
                      <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50" />
                      <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
@@ -602,22 +669,7 @@ export default function LandingClientResendStyle() {
                      <span className="ml-auto text-xs text-neutral-600">gym-tools.config.json</span>
                   </div>
                   
-                  <div className="space-y-1 text-neutral-400">
-                     <p><span className="text-purple-400">"tools"</span>: [</p>
-                     <p className="pl-4">{`{`}</p>
-                     <p className="pl-8"><span className="text-blue-400">"name"</span>: <span className="text-green-400">"book_yoga_class"</span>,</p>
-                     <p className="pl-8"><span className="text-blue-400">"description"</span>: <span className="text-green-400">"Réserve un créneau pour l'adhérent"</span>,</p>
-                     <p className="pl-8"><span className="text-blue-400">"parameters"</span>: {`{`}</p>
-                     <p className="pl-12"><span className="text-blue-400">"type"</span>: <span className="text-green-400">"object"</span>,</p>
-                     <p className="pl-12"><span className="text-blue-400">"properties"</span>: {`{`}</p>
-                     <p className="pl-16"><span className="text-blue-400">"class_id"</span>: {`{ "type": "string" }`},</p>
-                     <p className="pl-16"><span className="text-blue-400">"user_id"</span>: {`{ "type": "string" }`}</p>
-                     <p className="pl-12">{`}`}</p>
-                     <p className="pl-8">{`}`}</p>
-                     <p className="pl-4">{`},`}</p>
-                     <p className="pl-4"><span className="text-neutral-600">{"// ... other tools"}</span></p>
-                     <p>]</p>
-                  </div>
+                  <CodeBlock />
                   
                   {/* Execution Overlay Animation */}
                   <motion.div 
