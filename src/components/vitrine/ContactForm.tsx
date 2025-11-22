@@ -78,8 +78,9 @@ export default function ContactForm({ leadType = 'pilot', className = '' }: Cont
       case 'loading': return '⏳ Envoi en cours...';
       case 'success': return '✅ Demande envoyée !';
       case 'error': return '❌ Erreur - Réessayer';
-      case 'enterprise': return '🏢 Contacter l\'équipe Enterprise';
-      default: return leadType === 'pilot' ? '🚀 Candidater au programme pilote' : '📩 Envoyer ma demande';
+      default: 
+        if (leadType === 'enterprise') return '🏢 Contacter l\'équipe Enterprise';
+        return leadType === 'pilot' ? '🚀 Candidater au programme pilote' : '📩 Envoyer ma demande';
     }
   };
 
@@ -228,4 +229,3 @@ export default function ContactForm({ leadType = 'pilot', className = '' }: Cont
     </motion.form>
   );
 }
-

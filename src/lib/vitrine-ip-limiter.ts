@@ -285,10 +285,10 @@ export class VitrineIPLimiter {
         // Même en cas d'erreur, essayer de réinitialiser is_session_active
         // Ignorer les erreurs potentielles
         try {
-          await supabase
-            .from('vitrine_demo_sessions')
+        await supabase
+          .from('vitrine_demo_sessions')
             .update({ is_session_active: false } as never)
-            .eq('ip_address', ipAddress)
+          .eq('ip_address', ipAddress)
         } catch {
           // Ignorer erreur si déjà à false
         }

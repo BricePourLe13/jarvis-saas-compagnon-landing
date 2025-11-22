@@ -1,11 +1,11 @@
 'use client'
 
 import { ChakraProvider } from '@chakra-ui/react'
-import type { ReactNode } from 'react'
 import { jarvisTheme } from '@/theme/jarvisTheme'
+import type { ReactNode } from 'react'
 
-type ChakraProvidersProps = {
-  children: ReactNode
+interface ChakraProvidersProps {
+  children: ReactNode;
 }
 
 export function ChakraProviders({ children }: ChakraProvidersProps) {

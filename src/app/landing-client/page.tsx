@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import Image from "next/image";
-import { ArrowRight, Check, Code2, Dumbbell, Hotel, ShoppingBag, Mic, Play, Terminal, Cpu } from "lucide-react";
+import { ArrowRight, Check, Dumbbell, Hotel, ShoppingBag, Terminal } from "lucide-react";
 
 // 🎯 LAZY LOADED COMPONENTS
 const VoiceVitrineInterface = dynamic(
@@ -43,7 +42,6 @@ export default function LandingClientResendStyle() {
   const {
     connect: connectVoice,
     disconnect: disconnectVoice,
-    error: voiceError
   } = useVoiceVitrineChat({
     onStatusChange: setVoiceStatus,
     onTranscriptUpdate: setVoiceTranscript,
@@ -254,6 +252,8 @@ export default function LandingClientResendStyle() {
              <div>
                <div className="text-sm font-medium text-white">JARVIS vous écoute...</div>
                <div className="text-xs text-neutral-500 font-mono">SESSION: {voiceTimeRemaining}s</div>
+               {/* Hidden Transcript for accessibility/debug but part of UI state */}
+               {voiceTranscript && <div className="sr-only">{voiceTranscript}</div>}
              </div>
              <button 
                onClick={handleEndVoice}
@@ -418,7 +418,7 @@ export default function LandingClientResendStyle() {
                      <p className="pl-12">{`}`}</p>
                      <p className="pl-8">{`}`}</p>
                      <p className="pl-4">{`},`}</p>
-                     <p className="pl-4"><span className="text-neutral-600">// ... other tools</span></p>
+                     <p className="pl-4"><span className="text-neutral-600">{"// ... other tools"}</span></p>
                      <p>]</p>
                   </div>
                   
