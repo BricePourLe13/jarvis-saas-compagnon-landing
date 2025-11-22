@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
-import { ArrowRight, Check, Dumbbell, Hotel, ShoppingBag, Terminal } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, Check, Dumbbell, Hotel, ShoppingBag, Terminal, XCircle } from "lucide-react";
 
 // 🎯 LAZY LOADED COMPONENTS
 const VoiceVitrineInterface = dynamic(
@@ -37,6 +38,7 @@ export default function LandingClientResendStyle() {
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [voiceTimeRemaining, setVoiceTimeRemaining] = useState(300);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // 🎤 VOICE CHAT HOOK
   const {
@@ -50,6 +52,7 @@ export default function LandingClientResendStyle() {
 
   const handleStartVoice = async () => {
     try {
+      setErrorMessage(null);
       setIsVoiceActive(true);
       setVoiceStatus('connecting');
       await connectVoice();
@@ -68,6 +71,13 @@ export default function LandingClientResendStyle() {
       console.error('Erreur connexion vocale:', error);
       setVoiceStatus('error');
       setIsVoiceActive(false);
+      
+      // Gestion d'erreur améliorée
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Une erreur inattendue est survenue.");
+      }
     }
   };
 
@@ -87,25 +97,35 @@ export default function LandingClientResendStyle() {
     }
   };
 
+  // Animations sections
+  const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true },
+    transition: { duration: 0.6 }
+  };
+
   return (
-    <main className="min-h-screen bg-[#000000] text-white selection:bg-white/20 selection:text-white font-sans antialiased">
+    <main className="min-h-screen bg-[#000000] text-white selection:bg-white/20 selection:text-white font-sans antialiased overflow-x-hidden">
       
-      {/* 🎯 HEADER RESEND STYLE */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      {/* 🎯 HEADER RESEND STYLE - UPDATED */}
+      <header className="fixed top-6 left-0 right-0 z-50 px-6 flex justify-center">
+        <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-full px-6 h-14 flex items-center gap-8 shadow-2xl max-w-4xl w-full justify-between">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
-               {/* Logo Minimaliste */}
-               <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                 <div className="w-2 h-2 bg-black rounded-full" />
-               </div>
+               <Image 
+                 src="/logo_jarvis.png" 
+                 alt="JARVIS Logo" 
+                 width={24} 
+                 height={24} 
+                 className="w-6 h-6"
+               />
                <span className="font-bold text-lg tracking-tight">JARVIS</span>
             </div>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-neutral-400">
-              <a href="#infrastructure" className="hover:text-white transition-colors">Infrastructure</a>
+              <a href="#about" className="hover:text-white transition-colors">Solution</a>
               <a href="#showcase" className="hover:text-white transition-colors">Use Cases</a>
-              <a href="#developers" className="hover:text-white transition-colors">Developers</a>
-              <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
+              <a href="#infrastructure" className="hover:text-white transition-colors">Developers</a>
             </nav>
           </div>
           <div className="flex items-center gap-4">
@@ -117,7 +137,7 @@ export default function LandingClientResendStyle() {
              </a>
              <a 
                href="#contact"
-               className="text-sm font-medium bg-white text-black px-4 py-2 rounded-full hover:bg-neutral-200 transition-colors"
+               className="text-sm font-medium bg-white text-black px-5 py-2 rounded-full hover:bg-neutral-200 transition-colors"
              >
                Get Started
              </a>
@@ -125,20 +145,44 @@ export default function LandingClientResendStyle() {
         </div>
       </header>
 
-      {/* 🎯 HERO SECTION - AVEC SPHÈRE */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-        {/* Glow Effect Background */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+      {/* ERROR TOAST NOTIFICATION */}
+      <AnimatePresence>
+        {errorMessage && (
+          <motion.div 
+            initial={{ opacity: 0, y: -50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: -50, x: "-50%" }}
+            className="fixed top-24 left-1/2 z-[60] bg-red-900/90 backdrop-blur-md border border-red-500/50 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 max-w-md w-full"
+          >
+            <XCircle className="w-6 h-6 text-red-400 shrink-0" />
+            <div className="flex-1 text-sm">
+              <p className="font-bold mb-1">Action impossible</p>
+              <p className="text-red-200">{errorMessage}</p>
+            </div>
+            <button 
+              onClick={() => setErrorMessage(null)}
+              className="text-white/50 hover:text-white p-1"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 🎯 HERO SECTION - REFINED */}
+      <section className="relative pt-40 pb-20 lg:pt-56 lg:pb-32 overflow-hidden">
+        {/* Improved Glow Effect */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none" />
         
-        <div className="max-w-7xl mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           
           {/* Left: Text Content */}
-          <div className="space-y-8 text-center lg:text-left">
+          <div className="space-y-10 text-center lg:text-left">
             {/* Badge */}
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-blue-400 mx-auto lg:mx-0"
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-blue-400 mx-auto lg:mx-0 backdrop-blur-sm"
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -147,12 +191,12 @@ export default function LandingClientResendStyle() {
               v2.0 Infra is Live
             </motion.div>
 
-            {/* Headline */}
+            {/* Headline - Reduced size as requested */}
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1]"
+              className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.1]"
             >
               L'Infrastructure IA Vocale<br />
               <span className="text-neutral-500">pour vos Espaces Physiques.</span>
@@ -163,12 +207,12 @@ export default function LandingClientResendStyle() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-lg md:text-xl text-neutral-400 max-w-2xl leading-relaxed mx-auto lg:mx-0"
+              className="text-lg md:text-xl text-neutral-400 max-w-xl leading-relaxed mx-auto lg:mx-0"
             >
-              Transformez vos lieux physiques en expériences intelligentes. 
+              Transformez vos lieux en expériences intelligentes. 
               Détection d'intention, actions autonomes et analytics en temps réel.
               <br />
-              <span className="text-white font-medium">Éprouvé et validé dans l'industrie du Fitness.</span>
+              <span className="text-white font-medium mt-2 block">Éprouvé et validé dans l'industrie du Fitness.</span>
             </motion.p>
 
             {/* CTAs */}
@@ -178,38 +222,35 @@ export default function LandingClientResendStyle() {
               transition={{ delay: 0.3 }}
               className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start"
             >
-              <a 
-                href="#contact"
-                className="h-12 px-8 rounded-full bg-white text-black font-semibold hover:bg-neutral-200 transition-all flex items-center gap-2 group"
+              <button 
+                onClick={handleStartVoice}
+                className="h-12 px-8 rounded-full bg-white text-black font-semibold hover:bg-neutral-200 transition-all flex items-center gap-2 group shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]"
               >
-                Commencer maintenant
+                Tester la démo vocale
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </a>
+              </button>
               <a 
-                href="#infrastructure"
-                className="h-12 px-8 rounded-full bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-all flex items-center gap-2"
+                href="#about"
+                className="h-12 px-8 rounded-full bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-all flex items-center gap-2 backdrop-blur-md"
               >
-                Voir l'architecture
+                Découvrir Jarvis
               </a>
             </motion.div>
           </div>
 
-          {/* Right: 3D SPHERE (Resend Style Cube but Sphere) */}
+          {/* Right: 3D SPHERE */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, duration: 0.8 }}
             className="relative flex items-center justify-center lg:justify-end"
           >
-            {/* Container Interactif */}
             <div 
               className="relative w-[350px] h-[350px] sm:w-[450px] sm:h-[450px] cursor-pointer group"
               onClick={!isVoiceActive ? handleStartVoice : undefined}
             >
-              {/* Background Glow */}
               <div className="absolute inset-0 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-colors duration-500" />
               
-              {/* Sphere Wrapper */}
               <div className="relative w-full h-full flex items-center justify-center">
                 <Avatar3D 
                   size={400}
@@ -220,8 +261,7 @@ export default function LandingClientResendStyle() {
                 />
               </div>
 
-              {/* Status Badge (Floating near sphere) */}
-              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full flex items-center gap-3 shadow-xl">
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full flex items-center gap-3 shadow-xl hover:scale-105 transition-transform">
                 <div className={`w-2 h-2 rounded-full ${isVoiceActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
                 <span className="text-xs font-mono text-neutral-300 uppercase tracking-wider">
                   {isVoiceActive ? 'VOICE ACTIVE' : 'SYSTEM ONLINE'}
@@ -232,7 +272,7 @@ export default function LandingClientResendStyle() {
           </motion.div>
         </div>
 
-        {/* Active Voice State Indicator (Floating Bottom) - Only when active */}
+        {/* Active Voice State Indicator */}
         {isVoiceActive && (
            <motion.div 
              initial={{ opacity: 0, y: 20 }}
@@ -252,7 +292,6 @@ export default function LandingClientResendStyle() {
              <div>
                <div className="text-sm font-medium text-white">JARVIS vous écoute...</div>
                <div className="text-xs text-neutral-500 font-mono">SESSION: {voiceTimeRemaining}s</div>
-               {/* Hidden Transcript for accessibility/debug but part of UI state */}
                {voiceTranscript && <div className="sr-only">{voiceTranscript}</div>}
              </div>
              <button 
@@ -265,21 +304,84 @@ export default function LandingClientResendStyle() {
         )}
       </section>
 
-      {/* 🎯 LOGOS / TRUST */}
-      <section className="py-10 border-y border-white/5 bg-white/[0.02]">
+      {/* 🎯 LOGOS / TRUST - UPDATED */}
+      <section className="py-10 border-y border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <p className="text-sm text-neutral-500 font-medium mb-8">DEPLOYED IN PREMIER FITNESS LOCATIONS</p>
-          <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale">
-            {/* Placeholder Logos - Replace with real ones later */}
-            {['FITNESS PARK', 'BASIC-FIT', 'ON AIR', 'ORANGE THEORY', 'EQUINOX'].map((brand) => (
-               <span key={brand} className="text-xl font-bold font-mono">{brand}</span>
+          <p className="text-sm text-neutral-500 font-medium mb-8 tracking-wider">DEPLOYED IN PREMIER FITNESS LOCATIONS</p>
+          <div className="flex flex-wrap justify-center gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+            {['FORGE FITNESS', 'AREA SPORT CLUB'].map((brand) => (
+               <span key={brand} className="text-xl md:text-2xl font-bold font-mono text-white/80">{brand}</span>
             ))}
           </div>
         </div>
       </section>
 
+      {/* 🎯 WHAT IS JARVIS (NEW SECTION) */}
+      <section id="about" className="py-32 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-black to-neutral-950" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <motion.div 
+            {...fadeInUp}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center"
+          >
+            <div>
+              <h2 className="text-3xl md:text-5xl font-bold mb-8 leading-tight">
+                Plus qu'un assistant.<br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Une présence intelligente.</span>
+              </h2>
+              <div className="space-y-6 text-lg text-neutral-400 leading-relaxed">
+                <p>
+                  JARVIS s'incarne dans un miroir digital premium, offrant une interface naturelle et non-intrusive. Pas d'écran tactile complexe, pas de clavier : juste la voix.
+                </p>
+                <p>
+                  Il scanne les badges, reconnaît les membres, et engage la conversation pro-activement pour collecter du feedback, gérer les réservations ou simplement accueillir.
+                </p>
+                <ul className="space-y-3 mt-8">
+                  {[
+                    'Speech-to-Speech en <500ms',
+                    'Contexte persistant par membre',
+                    'Actions réelles via APIs',
+                    'Hardware premium inclus'
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-white/90">
+                       <Check className="w-5 h-5 text-blue-500" />
+                       {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-2xl" />
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black">
+                <Image 
+                  src="/images/jarvis-mirror.png" 
+                  alt="Miroir Jarvis en situation" 
+                  width={600} 
+                  height={800}
+                  className="w-full h-auto object-cover opacity-90 hover:opacity-100 transition-opacity duration-700"
+                />
+                {/* UI Overlay Mockup */}
+                <div className="absolute top-8 right-8 bg-black/60 backdrop-blur-md border border-white/10 p-4 rounded-xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                    <span className="text-xs font-mono text-white/70">LIVE ANALYSIS</span>
+                  </div>
+                  <div className="space-y-2 font-mono text-xs text-blue-400">
+                    <div>{`> Intent: "Booking"`}</div>
+                    <div>{`> Confidence: 98.5%`}</div>
+                    <div>{`> Action: trigger_webhook`}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* 🎯 BENTO GRID USE CASES */}
-      <section id="showcase" className="py-32 max-w-7xl mx-auto px-6">
+      <section id="showcase" className="py-32 max-w-7xl mx-auto px-6 border-t border-white/5 bg-neutral-950">
          <div className="mb-20">
            <h2 className="text-3xl md:text-4xl font-bold mb-6">Une infrastructure, <br/><span className="text-neutral-500">plusieurs réalités.</span></h2>
            <p className="text-neutral-400 max-w-2xl text-lg">JARVIS n'est pas juste une application, c'est une couche d'intelligence modulaire. Commencez avec notre module Fitness éprouvé, ou construisez votre propre verticale.</p>
@@ -287,7 +389,10 @@ export default function LandingClientResendStyle() {
 
          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Card 1: FITNESS (Active) */}
-            <div className="md:col-span-2 bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-colors">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="md:col-span-2 bg-gradient-to-br from-neutral-900 to-black border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all duration-300"
+            >
                <div className="absolute top-0 right-0 p-6">
                   <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">
                     <Check className="w-3 h-3" /> Production Ready
@@ -321,10 +426,13 @@ export default function LandingClientResendStyle() {
                </div>
                {/* Background Pattern */}
                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-            </div>
+            </motion.div>
 
             {/* Card 2: RETAIL (Coming Soon) */}
-            <div className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-colors">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all"
+            >
                <div className="absolute top-0 right-0 p-6">
                   <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800 text-neutral-400 text-xs font-medium border border-neutral-700">
                     Coming Soon
@@ -338,10 +446,13 @@ export default function LandingClientResendStyle() {
                   Assistant de vente augmenté. Recommandation produit basée sur l'historique et l'analyse sentimentale en temps réel.
                </p>
                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 to-transparent" />
-            </div>
+            </motion.div>
 
             {/* Card 3: HOSPITALITY (Coming Soon) */}
-            <div className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-colors">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="bg-neutral-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all"
+            >
                <div className="absolute top-0 right-0 p-6">
                   <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800 text-neutral-400 text-xs font-medium border border-neutral-700">
                     Coming Soon
@@ -355,13 +466,16 @@ export default function LandingClientResendStyle() {
                   Conciergerie 2.0. Check-in/out autonome, réservation de services et recommandations locales personnalisées.
                </p>
                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 to-transparent" />
-            </div>
+            </motion.div>
          </div>
       </section>
 
       {/* 🎯 DEVELOPER / INFRASTRUCTURE SECTION */}
-      <section id="infrastructure" className="py-32 bg-neutral-950 border-t border-white/10">
-         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section id="infrastructure" className="py-32 bg-black border-t border-white/10 relative overflow-hidden">
+         {/* Background Grid */}
+         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
+         
+         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
             <div className="space-y-8">
                <div className="inline-flex items-center gap-2 text-blue-400 font-mono text-sm mb-4">
                   <Terminal className="w-4 h-4" />
